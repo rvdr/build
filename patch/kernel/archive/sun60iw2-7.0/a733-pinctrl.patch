@@ -3,7 +3,7 @@ From: John Doe <john.doe@somewhere.on.planet>
 Date: Thu, 26 Mar 2026 15:02:37 +0100
 Subject: Patching kernel sun60iw2 files drivers/pinctrl/sunxi/Kconfig
  drivers/pinctrl/sunxi/Makefile drivers/pinctrl/sunxi/pinctrl-sun60i-a733-r.c
- drivers/pinctrl/sunxi/pinctrl-sun60i-a733.c
+ drivers/pinctrl/sunxi/pinctrl-sun60i-a733.c include/dt-bindings/gpio/sun4i-gpio.h
 
 Signed-off-by: John Doe <john.doe@somewhere.on.planet>
 ---
@@ -11,7 +11,8 @@ Signed-off-by: John Doe <john.doe@somewhere.on.planet>
  drivers/pinctrl/sunxi/Makefile                |    2 +
  drivers/pinctrl/sunxi/pinctrl-sun60i-a733-r.c |  274 +
  drivers/pinctrl/sunxi/pinctrl-sun60i-a733.c   | 2722 ++++++++++
- 4 files changed, 3008 insertions(+)
+ include/dt-bindings/gpio/sun4i-gpio.h	       | 28 ++++++++++
+ 4 files changed, 3036 insertions(+)
 
 diff --git a/drivers/pinctrl/sunxi/Kconfig b/drivers/pinctrl/sunxi/Kconfig
 index dc62eba96348..22879f3a4a12 100644
@@ -2318,6 +2319,40 @@ index 000000000000..d61cc9ec66e4
 +MODULE_AUTHOR("rengaomin<rengaomin@allwinnertech.com>");
 +MODULE_LICENSE("GPL");
 +MODULE_VERSION(SUNXI_PINCTRL_VERSION);
+diff --git a/include/dt-bindings/gpio/sun4i-gpio.h b/include/dt-bindings/gpio/sun4i-gpio.h
+new file mode 100644
+index 000000000000..44344c1ff16f
+--- /dev/null
++++ b/include/dt-bindings/gpio/sun4i-gpio.h
+@@ -0,0 +1,28 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/* Copyright(c) 2020 - 2023 Allwinner Technology Co.,Ltd. All rights reserved. */
++/*
++ * Author: frank@allwinner.com
++ */
++
++#ifndef __DT_SUN4I_GPIO_H
++#define __DT_SUN4I_GPIO_H
++
++/* pio */
++#define  PA	0
++#define  PB	1
++#define  PC	2
++#define  PD	3
++#define  PE	4
++#define  PF	5
++#define  PG	6
++#define  PH	7
++#define  PI	8
++#define  PJ	9
++#define  PK	10
++
++/* r pio */
++#define  PL	0
++#define  PM	1
++#define  PN	2
++
++#endif /* __DT_SUN4I_GPIO_H */
 -- 
 Created with Armbian build tools https://github.com/armbian/build
 
