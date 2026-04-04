@@ -1,0 +1,2743 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: John Doe <john.doe@somewhere.on.planet>
+Date: Sat, 28 Mar 2026 12:59:47 +0100
+Subject: Patching u-boot sunxi64 files arch/arm/dts/Makefile
+ dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7a.dts dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7z.dts
+ dts/upstream/src/arm64/allwinner/sun60i-a733-orangepi-4-pro.dts dts/upstream/src/arm64/allwinner/sun60i-a733.dtsi
+ include/configs/sun60i.h arch/arm/mach-sunxi/Kconfig
+ arch/arm/mach-sunxi/board.c 
+
+Signed-off-by: John Doe <john.doe@somewhere.on.planet>
+---
+ arch/arm/dts/Makefile                       			 |    4 +
+ dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7a.dts      | 1333 ++++++++++
+ dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7z.dts      | 1333 ++++++++++
+ dts/upstream/src/arm64/allwinner/sun60i-a733-orangepi-4-pro.dts | 1333 ++++++++++
+ dts/upstream/src/arm64/allwinner/sun60i-a733.dtsi               |  508 ++++
+ include/configs/sun60i.h 		     			 | 11 ++++++++++
+ arch/arm/mach-sunxi/Kconfig                 			 |   38 +
+ arch/arm/mach-sunxi/board.c 		     			 | 4 ++++
+ 6 files changed, 4535 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
+index fcad6fb2fc7..7610f9a305e 100644
+--- a/arch/arm/dts/Makefile
++++ b/arch/arm/dts/Makefile
+@@ -690,10 +690,14 @@ dtb-$(CONFIG_MACH_SUN50I) += \
+ 	sun50i-a64-pinetab.dtb \
+ 	sun50i-a64-sopine-baseboard.dtb \
+ 	sun50i-a64-teres-i.dtb
+ dtb-$(CONFIG_MACH_SUN9I) += \
+ 	sun9i-a80-cx-a99.dtb
++dtb-$(CONFIG_MACH_SUN60I_A733) += \
++	sun60i-a733-cubie-a7a.dtb \
++	sun60i-a733-cubie-a7z.dtb \
++	sun60i-a733-orangepi-4-pro.dtb
+ 
+ dtb-$(CONFIG_VF610) += vf610-colibri-eval-v3.dtb \
+ 	vf610-twr.dtb \
+ 	vf610-pcm052.dtb \
+ 	vf610-bk4r1.dtb
+diff --git a/dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7a.dts b/dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7a.dts
+new file mode 100644
+index 00000000000..eec2361a694
+--- /dev/null
++++ b/dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7a.dts
+@@ -0,0 +1,471 @@
++/*
++ * Allwinner Technology CO., Ltd. sun60iw2p1 soc board.
++ *
++ * soc board support.
++ */
++
++#include <dt-bindings/gpio/gpio.h>
++#include "sun60i-a733.dtsi"
++
++/ {
++	model = "Radxa Cubie A7A";
++	compatible = "allwinner,a733", "arm,sun60iw2p1";
++
++	aliases:aliases@45100000 {
++		pwmchip0 = &pwmchip0;
++		pwmchip1 = &pwmchip1;
++		pwmchip2 = &pwmchip2;
++		pwm0 = &pwm0;
++		pwm1 = &pwm1;
++		pwm2 = &pwm2;
++		pwm3 = &pwm3;
++		pwm4 = &pwm4;
++		pwm16 = &pwm16;
++		pwm19 = &pwm19;
++		twi6 = &twi6;
++		pmu0 = &pmu0;
++		spi0 = &spi0;
++		ethernet0 = &gmac0;
++		ethernet1 = &gmac1;
++	};
++};
++
++&platform {
++	eraseflag   = <1>;
++	next_work   = <3>;
++	debug_mode  = <4>;
++};
++
++&target {
++	boot_clock = <1008>;	/*CPU boot frequency, Unit: MHz*/
++	storage_type = <0xffffffff>; /*boot medium, 0-nand, 1-card0, 2-card2, -1(defualt)auto scan*/
++	burn_key = <1>;		/*1:support burn key; 0:not support burn key*/
++	dragonboard_test = <0>;	/*1:support card boot dragonboard; 0:not support card boot dragonboard*/
++};
++
++&power_sply {
++	ntc_status = <2>;
++	battery_exist = <0>;
++};
++
++&charger0 {
++	pmu_safe_vol = <3400>;
++	bat_bmp_type = <1>;
++	ntc_cur = <60>;
++	safe_temp_H = <600>;//60
++	safe_temp_L = <0xFFFFFFCE>;//-5
++	pmu_bat_temp_para1 = <4541>; //Murata -25
++	pmu_bat_temp_para2 = <2762>; //-15
++	pmu_bat_temp_para3 = <2180>; //-10
++	pmu_bat_temp_para4 = <1732>; //-5
++	pmu_bat_temp_para5 = <1386>;//0
++	pmu_bat_temp_para6 = <1117>; //5
++	pmu_bat_temp_para7 = <905>; //10
++	pmu_bat_temp_para8 = <606>; //20
++	pmu_bat_temp_para9 = <414>; //30
++	pmu_bat_temp_para10 = <290>; //40
++	pmu_bat_temp_para11 = <244>; //45
++	pmu_bat_temp_para12 = <205>; //50
++	pmu_bat_temp_para13 = <176>; //55
++	pmu_bat_temp_para14 = <150>; //60
++	pmu_bat_temp_para15 = <111>; //70
++	pmu_bat_temp_para16 = <83>; //80
++};
++
++&twi6 {
++	clock-frequency = <200000>;
++	pinctrl-0 = <&s_twi0_pins_a>;
++	pinctrl-1 = <&s_twi0_pins_b>;
++	// twi-supply = <&reg_aldo3>;
++	status = "okay";
++
++	pmu1: pmu@36 {
++		compatible = "x-powers,axp8191";
++		reg = <0x36>;
++		status = "okay";
++		regulator0: regulators@0 {
++			reg_dcdc1: dcdc1 {
++				regulator-name = "axp8191-dcdc1";
++			};
++			reg_dcdc2: dcdc2 {
++				regulator-name = "axp8191-dcdc2";
++			};
++			reg_dcdc3: dcdc3 {
++				regulator-name = "axp8191-dcdc3";
++			};
++			reg_dcdc4: dcdc4 {
++				regulator-name = "axp8191-dcdc4";
++			};
++			reg_dcdc5: dcdc5 {
++				regulator-name = "axp8191-dcdc5";
++			};
++			reg_dcdc6: dcdc6 {
++				regulator-name = "axp8191-dcdc6";
++			};
++			reg_dcdc7: dcdc7 {
++				regulator-name = "axp8191-dcdc7";
++			};
++			reg_dcdc8: dcdc8 {
++				regulator-name = "axp8191-dcdc8";
++			};
++			reg_dcdc9: dcdc9 {
++				regulator-name = "axp8191-dcdc9";
++			};
++			reg_rtcldo: rtcldo {
++				regulator-name = "axp8191-rtcldo";
++			};
++			reg_aldo1: aldo1 {
++				regulator-name = "axp8191-aldo1";
++			};
++			reg_aldo2: aldo2 {
++				regulator-name = "axp8191-aldo2";
++			};
++			reg_aldo3: aldo3 {
++				regulator-name = "axp8191-aldo3";
++			};
++			reg_aldo4: aldo4 {
++				regulator-name = "axp8191-aldo4";
++			};
++			reg_aldo5: aldo5 {
++				regulator-name = "axp8191-aldo5";
++			};
++			reg_aldo6: aldo6 {
++				regulator-name = "axp8191-aldo6";
++			};
++			reg_bldo1: bldo1 {
++				regulator-name = "axp8191-bldo1";
++			};
++			reg_bldo2: bldo2 {
++				regulator-name = "axp8191-bldo2";
++			};
++			reg_bldo3: bldo3 {
++				regulator-name = "axp8191-bldo3";
++			};
++			reg_bldo4: bldo4 {
++				regulator-name = "axp8191-bldo4";
++			};
++			reg_bldo5: bldo5 {
++				regulator-name = "axp8191-bldo5";
++			};
++			reg_cldo1: cldo1 {
++				regulator-name = "axp8191-cldo1";
++			};
++			reg_cldo2: cldo2 {
++				regulator-name = "axp8191-cldo2";
++			};
++			reg_cldo3: cldo3 {
++				regulator-name = "axp8191-cldo3";
++			};
++			reg_cldo4: cldo4 {
++				regulator-name = "axp8191-cldo4";
++			};
++			reg_cldo5: cldo5 {
++				regulator-name = "axp8191-cldo5";
++			};
++			reg_dldo1: dldo1 {
++				regulator-name = "axp8191-dldo1";
++			};
++			reg_dldo2: dldo2 {
++				regulator-name = "axp8191-dldo2";
++			};
++			reg_dldo3: dldo3 {
++				regulator-name = "axp8191-dldo3";
++			};
++			reg_dldo4: dldo4 {
++				regulator-name = "axp8191-dldo4";
++			};
++			reg_dldo5: dldo5 {
++				regulator-name = "axp8191-dldo5";
++			};
++			reg_dldo6: dldo6 {
++				regulator-name = "axp8191-dldo6";
++			};
++			reg_eldo1: eldo1 {
++				regulator-name = "axp8191-eldo1";
++			};
++			reg_eldo2: eldo2 {
++				regulator-name = "axp8191-eldo2";
++			};
++			reg_eldo3: eldo3 {
++				regulator-name = "axp8191-eldo3";
++			};
++			reg_eldo4: eldo4 {
++				regulator-name = "axp8191-eldo4";
++			};
++			reg_eldo5: eldo5 {
++				regulator-name = "axp8191-eldo5";
++			};
++			reg_eldo6: eldo6 {
++				regulator-name = "axp8191-eldo6";
++			};
++			reg_dc1sw1: dc1sw1 {
++				regulator-name = "axp8191-dc1sw1";
++				swin-supply = <&reg_dcdc1>;
++			};
++			reg_dc1sw2: dc1sw2 {
++				regulator-name = "axp8191-dc1sw2";
++				swin-supply = <&reg_dcdc1>;
++			};
++		};
++	};
++};
++
++&sdc0_pins_a {
++		allwinner,pins = "PF0", "PF1",
++				 "PF3", "PF4", "PF5";
++		allwinner,function = "sdc0";
++		allwinner,muxsel = <2>;
++		allwinner,drive = <0>;
++		allwinner,pull = <1>;
++};
++
++&sdc0_pins_b {
++		allwinner,pins = "PF2";
++		allwinner,function = "sdc0";
++		allwinner,muxsel = <2>;
++		allwinner,drive = <2>;
++		allwinner,pull = <1>;
++};
++
++&sdc0_pins_c {
++		allwinner,pins = "PF0", "PF1", "PF2",
++		  		 "PF3", "PF4", "PF5";
++		allwinner,function = "uart0_jtag";
++		allwinner,muxsel = <3>;
++		allwinner,drive = <0>;
++		allwinner,pull = <1>;
++};
++
++&sdc2_pins_a {
++		allwinner,pins = "PC6",
++				 "PC8", "PC9", "PC10", "PC11",
++				 "PC13", "PC14", "PC15", "PC16";
++		allwinner,function = "sdc3";
++		allwinner,muxsel = <4>;
++		allwinner,drive = <1>;
++		allwinner,pull = <1>;
++};
++
++&sdc2_pins_b {
++		allwinner,pins = "PC1", "PC5";
++		allwinner,function = "sdc3";
++		allwinner,muxsel = <4>;
++		allwinner,drive = <3>;
++		allwinner,pull = <1>;
++};
++
++&sdc2_pins_c {
++		allwinner,pins = "PC0";
++		allwinner,function = "sdc3";
++		allwinner,muxsel = <4>;
++		allwinner,drive = <3>;
++		allwinner,pull = <2>;
++};
++
++&pwm4_pin_active {
++		allwinner,pins = "PD22";
++		allwinner,function = "pwm0_4";
++		allwinner,muxsel = <0x2>;
++		allwinner,drive = <3>;
++		allwinner,pull = <2>;
++};
++
++&pwm4_pin_sleep {
++		allwinner,pins = "PD22";
++		allwinner,function = "io_disabled";
++		allwinner,muxsel = <0xf>;
++		allwinner,drive = <3>;
++		allwinner,pull = <2>;
++};
++
++&pwm16_pin_active {
++	allwinner,pins = "PI15";
++	allwinner,function = "pwm1_6";
++	allwinner,muxsel = <0x5>;
++	allwinner,drive = <3>;
++	allwinner,pull = <2>;
++};
++
++&pwm16_pin_sleep {
++	allwinner,pins = "PI15";
++	allwinner,function = "io_disabled";
++	allwinner,muxsel = <0xf>;
++	allwinner,drive = <3>;
++	allwinner,pull = <2>;
++};
++
++// &pwm18_pin_active {
++// 	allwinner,pins = "PJ26";
++// 	allwinner,function = "pwm1_8";
++// 	allwinner,muxsel = <0x3>;
++// 	allwinner,drive = <3>;
++// 	allwinner,pull = <2>;
++// };
++
++// &pwm18_pin_sleep {
++// 	allwinner,pins = "PJ26";
++// 	allwinner,function = "io_disabled";
++// 	allwinner,muxsel = <0xf>;
++// 	allwinner,drive = <3>;
++// 	allwinner,pull = <2>;
++// };
++
++&pwm19_pin_active {
++	allwinner,pins = "PE15";
++	allwinner,function = "pwm1_9";
++	allwinner,muxsel = <0x5>;
++	allwinner,drive = <3>;
++	allwinner,pull = <2>;
++};
++
++&pwm19_pin_sleep {
++	allwinner,pins = "PE15";
++	allwinner,function = "io_disabled";
++	allwinner,muxsel = <0xf>;
++	allwinner,drive = <3>;
++	allwinner,pull = <2>;
++};
++
++&spi0_pins_a {
++	allwinner,pins = "PC12", "PC2", "PC4";
++	allwinner,pname = "spi0_sclk", "spi0_mosi", "spi0_miso";
++	allwinner,function = "spi0";
++	allwinner,muxsel = <5>;
++	allwinner,drive = <1>;
++	allwinner,pull = <0>;
++};
++
++&spi0_pins_b {
++	allwinner,pins = "PC3", "PC15", "PC16";
++	allwinner,pname = "spi0_cs0", "spi0_wp", "spi0_hold";
++	allwinner,function = "spi0";
++	allwinner,muxsel = <5>;
++	allwinner,drive = <1>;
++	allwinner,pull = <1>;
++};
++
++&spi0_pins_c {
++	allwinner,pins = "PC2", "PC3", "PC4", "PC12",
++					"PC15", "PC16";
++	allwinner,function = "gpio_in";
++	allwinner,muxsel = <0>;
++	allwinner,drive = <1>;
++	allwinner,pull = <0>;
++};
++
++&spi0 {
++	clock-frequency = <5000000>;
++	pinctrl-0 = <&spi0_pins_a &spi0_pins_b>;
++	pinctrl-1 = <&spi0_pins_c>;
++	pinctrl-names = "default", "sleep";
++	/*spi-supply = <&reg_cldo5>;*/
++	spi_slave_mode = <0>;
++	spi0_cs_number = <1>;
++	spi0_cs_bitmap = <1>;
++	status = "okay";
++
++	spi_board0 {
++		device_type = "spi_board0";
++		compatible = "spi-nor";
++		spi-max-frequency = <5000000>;
++		m25p,fast-read = <1>;
++		reg = <0x0>;
++		spi-rx-bus-width = <0x1>;
++		spi-tx-bus-width = <0x1>;
++		status = "okay";
++	};
++};
++
++&mmc0 {
++	vmmc-supply = <&reg_dc1sw2>;
++	cd-gpios = <&pio 5 6 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; //PF6
++	bus-width = <4>;
++	status = "okay";
++};
++
++/*
++ *recovery_adc_used :  Module enable pin,    1: Enabled, 0: Disabled
++ *press_mode_enable :  Long/short press mode enable, 1: Enabled, 0: Disabled
++ *                     a) If this mode is enabled, key_work_mode is disabled, and short_press_mode and long_press_mode take effect;
++ *                     the recovery button can trigger two different modes via long press and short press;
++ *                     b) If this mode is disabled, key_work_mode takes effect, and the recovery button can only trigger one mode.
++ *key_work_mode     :  Mode selection
++ *                     0: Flash ROM,
++ *                     1: One-click recovery (U-Boot stage),
++ *                     2: Android recovery,
++ *                     3: Android factory reset.
++ *                     If not set, the default mode is Android Recovery.
++ *short_press_mode  :  Mode triggered by a short press; options are the same as above.
++ *long_press_mode   :  Mode triggered by a long press; options are the same as above.
++ *key_press_time    :  Defines the duration of a long press; unit: milliseconds.
++ *recovery_key      :  Key configuration.
++ */
++&adc_boot_recovery {
++	recovery_adc_used = <1>;
++	recovery_adc_channel = <0>; /* vol+ key */
++	press_mode_enable = <1>;
++	short_press_mode = <0x0>;
++	long_press_mode = <0x2>;
++	key_press_time = <2000>;
++	key_min = <9>;
++	key_max = <11>;
++};
++
++&gpadc_boot_recovery {
++	recovery_adc_used = <1>;
++	recovery_adc_channel = <9>; /* recovery key */
++	press_mode_enable = <1>;
++	short_press_mode = <0x0>;
++	long_press_mode = <0x3>;
++	key_press_time = <5000>;
++	key_min = <455>;
++	key_max = <500>;
++};
++
++&serdes {
++	status = "okay";
++	combophy0: combo-phy0@6c01000 {
++		lane_invert = <0 0 0 0>;
++		lane_remap = <2 3 0 1>;
++	};
++};
++
++&sid {
++	sid-supply = <&reg_dldo1>;
++	voltage = <1800>;
++	power_supply = "dldo6";
++};
++
++&pwm4{
++	pinctrl-names = "active","sleep";
++	pinctrl-0 = <&pwm4_pin_active>;
++	pinctrl-1 = <&pwm4_pin_sleep>;
++	status = "okay";
++};
++
++&pwm16 {
++	pinctrl-names = "active","sleep";
++	pinctrl-0 = <&pwm16_pin_active>;
++	pinctrl-1 = <&pwm16_pin_sleep>;
++	status = "disabled";
++};
++
++// &pwm18 {
++// 	pinctrl-names = "active","sleep";
++// 	pinctrl-0 = <&pwm18_pin_active>;
++// 	pinctrl-1 = <&pwm18_pin_sleep>;
++// 	status = "okay";
++// };
++
++&pwm19 {
++	pinctrl-names = "active","sleep";
++	pinctrl-0 = <&pwm19_pin_active>;
++	pinctrl-1 = <&pwm19_pin_sleep>;
++	status = "okay";
++};
++
++&pcie_rc {
++	status = "okay";
++	pcie1v8-supply = <&reg_bldo1>;
++	pcie3v3-supply = <&reg_dcdc1>;
++};
+diff --git a/dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7z.dts b/dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7z.dts
+new file mode 100644
+index 00000000000..50e1cc380e9
+--- /dev/null
++++ b/dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7z.dts
+@@ -0,0 +1,472 @@
++/*
++ * Allwinner Technology CO., Ltd. sun60iw2p1 soc board.
++ *
++ * soc board support.
++ */
++
++#include <dt-bindings/gpio/gpio.h>
++#include "sun60i-a733.dtsi"
++
++/ {
++	model = "Radxa Cubie A7Z";
++	compatible = "allwinner,a733", "arm,sun60iw2p1";
++
++	aliases:aliases@45100000 {
++		pwmchip0 = &pwmchip0;
++		pwmchip1 = &pwmchip1;
++		pwmchip2 = &pwmchip2;
++		pwm0 = &pwm0;
++		pwm1 = &pwm1;
++		pwm2 = &pwm2;
++		pwm3 = &pwm3;
++		pwm4 = &pwm4;
++		pwm16 = &pwm16;
++		pwm19 = &pwm19;
++		twi6 = &twi6;
++		pmu0 = &pmu0;
++		spi0 = &spi0;
++		ethernet0 = &gmac0;
++		ethernet1 = &gmac1;
++	};
++};
++
++&platform {
++	eraseflag   = <1>;
++	next_work   = <3>;
++	debug_mode  = <4>;
++};
++
++&target {
++	boot_clock = <1008>;	/*CPU boot frequency, Unit: MHz*/
++	storage_type = <0xffffffff>; /*boot medium, 0-nand, 1-card0, 2-card2, -1(defualt)auto scan*/
++	burn_key = <1>;		/*1:support burn key; 0:not support burn key*/
++	dragonboard_test = <0>;	/*1:support card boot dragonboard; 0:not support card boot dragonboard*/
++};
++
++&power_sply {
++	ntc_status = <2>;
++	battery_exist = <0>;
++};
++
++&charger0 {
++	pmu_safe_vol = <3400>;
++	bat_bmp_type = <1>;
++	ntc_cur = <60>;
++	safe_temp_H = <600>;//60
++	safe_temp_L = <0xFFFFFFCE>;//-5
++	pmu_bat_temp_para1 = <4541>; //Murata -25
++	pmu_bat_temp_para2 = <2762>; //-15
++	pmu_bat_temp_para3 = <2180>; //-10
++	pmu_bat_temp_para4 = <1732>; //-5
++	pmu_bat_temp_para5 = <1386>;//0
++	pmu_bat_temp_para6 = <1117>; //5
++	pmu_bat_temp_para7 = <905>; //10
++	pmu_bat_temp_para8 = <606>; //20
++	pmu_bat_temp_para9 = <414>; //30
++	pmu_bat_temp_para10 = <290>; //40
++	pmu_bat_temp_para11 = <244>; //45
++	pmu_bat_temp_para12 = <205>; //50
++	pmu_bat_temp_para13 = <176>; //55
++	pmu_bat_temp_para14 = <150>; //60
++	pmu_bat_temp_para15 = <111>; //70
++	pmu_bat_temp_para16 = <83>; //80
++};
++
++&twi6 {
++	clock-frequency = <200000>;
++	pinctrl-0 = <&s_twi0_pins_a>;
++	pinctrl-1 = <&s_twi0_pins_b>;
++	// twi-supply = <&reg_aldo3>;
++	status = "okay";
++
++	pmu1: pmu@36 {
++		compatible = "x-powers,axp8191";
++		reg = <0x36>;
++		status = "okay";
++		regulator0: regulators@0 {
++			reg_dcdc1: dcdc1 {
++				regulator-name = "axp8191-dcdc1";
++			};
++			reg_dcdc2: dcdc2 {
++				regulator-name = "axp8191-dcdc2";
++			};
++			reg_dcdc3: dcdc3 {
++				regulator-name = "axp8191-dcdc3";
++			};
++			reg_dcdc4: dcdc4 {
++				regulator-name = "axp8191-dcdc4";
++			};
++			reg_dcdc5: dcdc5 {
++				regulator-name = "axp8191-dcdc5";
++			};
++			reg_dcdc6: dcdc6 {
++				regulator-name = "axp8191-dcdc6";
++			};
++			reg_dcdc7: dcdc7 {
++				regulator-name = "axp8191-dcdc7";
++			};
++			reg_dcdc8: dcdc8 {
++				regulator-name = "axp8191-dcdc8";
++			};
++			reg_dcdc9: dcdc9 {
++				regulator-name = "axp8191-dcdc9";
++			};
++			reg_rtcldo: rtcldo {
++				regulator-name = "axp8191-rtcldo";
++			};
++			reg_aldo1: aldo1 {
++				regulator-name = "axp8191-aldo1";
++			};
++			reg_aldo2: aldo2 {
++				regulator-name = "axp8191-aldo2";
++			};
++			reg_aldo3: aldo3 {
++				regulator-name = "axp8191-aldo3";
++			};
++			reg_aldo4: aldo4 {
++				regulator-name = "axp8191-aldo4";
++			};
++			reg_aldo5: aldo5 {
++				regulator-name = "axp8191-aldo5";
++			};
++			reg_aldo6: aldo6 {
++				regulator-name = "axp8191-aldo6";
++			};
++			reg_bldo1: bldo1 {
++				regulator-name = "axp8191-bldo1";
++			};
++			reg_bldo2: bldo2 {
++				regulator-name = "axp8191-bldo2";
++			};
++			reg_bldo3: bldo3 {
++				regulator-name = "axp8191-bldo3";
++			};
++			reg_bldo4: bldo4 {
++				regulator-name = "axp8191-bldo4";
++			};
++			reg_bldo5: bldo5 {
++				regulator-name = "axp8191-bldo5";
++			};
++			reg_cldo1: cldo1 {
++				regulator-name = "axp8191-cldo1";
++			};
++			reg_cldo2: cldo2 {
++				regulator-name = "axp8191-cldo2";
++			};
++			reg_cldo3: cldo3 {
++				regulator-name = "axp8191-cldo3";
++			};
++			reg_cldo4: cldo4 {
++				regulator-name = "axp8191-cldo4";
++			};
++			reg_cldo5: cldo5 {
++				regulator-name = "axp8191-cldo5";
++			};
++			reg_dldo1: dldo1 {
++				regulator-name = "axp8191-dldo1";
++			};
++			reg_dldo2: dldo2 {
++				regulator-name = "axp8191-dldo2";
++			};
++			reg_dldo3: dldo3 {
++				regulator-name = "axp8191-dldo3";
++			};
++			reg_dldo4: dldo4 {
++				regulator-name = "axp8191-dldo4";
++			};
++			reg_dldo5: dldo5 {
++				regulator-name = "axp8191-dldo5";
++			};
++			reg_dldo6: dldo6 {
++				regulator-name = "axp8191-dldo6";
++			};
++			reg_eldo1: eldo1 {
++				regulator-name = "axp8191-eldo1";
++			};
++			reg_eldo2: eldo2 {
++				regulator-name = "axp8191-eldo2";
++			};
++			reg_eldo3: eldo3 {
++				regulator-name = "axp8191-eldo3";
++			};
++			reg_eldo4: eldo4 {
++				regulator-name = "axp8191-eldo4";
++			};
++			reg_eldo5: eldo5 {
++				regulator-name = "axp8191-eldo5";
++			};
++			reg_eldo6: eldo6 {
++				regulator-name = "axp8191-eldo6";
++			};
++			reg_dc1sw1: dc1sw1 {
++				regulator-name = "axp8191-dc1sw1";
++				swin-supply = <&reg_dcdc1>;
++			};
++			reg_dc1sw2: dc1sw2 {
++				regulator-name = "axp8191-dc1sw2";
++				swin-supply = <&reg_dcdc1>;
++			};
++		};
++	};
++};
++
++&sdc0_pins_a {
++		allwinner,pins = "PF0", "PF1",
++				 "PF3", "PF4", "PF5";
++		allwinner,function = "sdc0";
++		allwinner,muxsel = <2>;
++		allwinner,drive = <0>;
++		allwinner,pull = <1>;
++};
++
++&sdc0_pins_b {
++		allwinner,pins = "PF2";
++		allwinner,function = "sdc0";
++		allwinner,muxsel = <2>;
++		allwinner,drive = <2>;
++		allwinner,pull = <1>;
++};
++
++&sdc0_pins_c {
++		allwinner,pins = "PF0", "PF1", "PF2",
++		  		 "PF3", "PF4", "PF5";
++		allwinner,function = "uart0_jtag";
++		allwinner,muxsel = <3>;
++		allwinner,drive = <0>;
++		allwinner,pull = <1>;
++};
++
++&sdc2_pins_a {
++		allwinner,pins = "PC6",
++				 "PC8", "PC9", "PC10", "PC11",
++				 "PC13", "PC14", "PC15", "PC16";
++		allwinner,function = "sdc3";
++		allwinner,muxsel = <4>;
++		allwinner,drive = <1>;
++		allwinner,pull = <1>;
++};
++
++&sdc2_pins_b {
++		allwinner,pins = "PC1", "PC5";
++		allwinner,function = "sdc3";
++		allwinner,muxsel = <4>;
++		allwinner,drive = <3>;
++		allwinner,pull = <1>;
++};
++
++&sdc2_pins_c {
++		allwinner,pins = "PC0";
++		allwinner,function = "sdc3";
++		allwinner,muxsel = <4>;
++		allwinner,drive = <3>;
++		allwinner,pull = <2>;
++};
++
++&pwm4_pin_active {
++		allwinner,pins = "PD22";
++		allwinner,function = "pwm0_4";
++		allwinner,muxsel = <0x2>;
++		allwinner,drive = <3>;
++		allwinner,pull = <2>;
++};
++
++&pwm4_pin_sleep {
++		allwinner,pins = "PD22";
++		allwinner,function = "io_disabled";
++		allwinner,muxsel = <0xf>;
++		allwinner,drive = <3>;
++		allwinner,pull = <2>;
++};
++
++&pwm16_pin_active {
++	allwinner,pins = "PI15";
++	allwinner,function = "pwm1_6";
++	allwinner,muxsel = <0x5>;
++	allwinner,drive = <3>;
++	allwinner,pull = <2>;
++};
++
++&pwm16_pin_sleep {
++	allwinner,pins = "PI15";
++	allwinner,function = "io_disabled";
++	allwinner,muxsel = <0xf>;
++	allwinner,drive = <3>;
++	allwinner,pull = <2>;
++};
++
++// &pwm18_pin_active {
++// 	allwinner,pins = "PJ26";
++// 	allwinner,function = "pwm1_8";
++// 	allwinner,muxsel = <0x3>;
++// 	allwinner,drive = <3>;
++// 	allwinner,pull = <2>;
++// };
++
++// &pwm18_pin_sleep {
++// 	allwinner,pins = "PJ26";
++// 	allwinner,function = "io_disabled";
++// 	allwinner,muxsel = <0xf>;
++// 	allwinner,drive = <3>;
++// 	allwinner,pull = <2>;
++// };
++
++&pwm19_pin_active {
++	allwinner,pins = "PE15";
++	allwinner,function = "pwm1_9";
++	allwinner,muxsel = <0x5>;
++	allwinner,drive = <3>;
++	allwinner,pull = <2>;
++};
++
++&pwm19_pin_sleep {
++	allwinner,pins = "PE15";
++	allwinner,function = "io_disabled";
++	allwinner,muxsel = <0xf>;
++	allwinner,drive = <3>;
++	allwinner,pull = <2>;
++};
++
++&spi0_pins_a {
++	allwinner,pins = "PC12", "PC2", "PC4";
++	allwinner,pname = "spi0_sclk", "spi0_mosi", "spi0_miso";
++	allwinner,function = "spi0";
++	allwinner,muxsel = <5>;
++	allwinner,drive = <1>;
++	allwinner,pull = <0>;
++};
++
++&spi0_pins_b {
++	allwinner,pins = "PC3", "PC15", "PC16";
++	allwinner,pname = "spi0_cs0", "spi0_wp", "spi0_hold";
++	allwinner,function = "spi0";
++	allwinner,muxsel = <5>;
++	allwinner,drive = <1>;
++	allwinner,pull = <1>;
++};
++
++&spi0_pins_c {
++	allwinner,pins = "PC2", "PC3", "PC4", "PC12",
++					"PC15", "PC16";
++	allwinner,function = "gpio_in";
++	allwinner,muxsel = <0>;
++	allwinner,drive = <1>;
++	allwinner,pull = <0>;
++};
++
++&spi0 {
++	clock-frequency = <5000000>;
++	pinctrl-0 = <&spi0_pins_a &spi0_pins_b>;
++	pinctrl-1 = <&spi0_pins_c>;
++	pinctrl-names = "default", "sleep";
++	/*spi-supply = <&reg_cldo5>;*/
++	spi_slave_mode = <0>;
++	spi0_cs_number = <1>;
++	spi0_cs_bitmap = <1>;
++	status = "okay";
++
++	spi_board0 {
++		device_type = "spi_board0";
++		compatible = "spi-nor";
++		spi-max-frequency = <5000000>;
++		m25p,fast-read = <1>;
++		reg = <0x0>;
++		spi-rx-bus-width = <0x1>;
++		spi-tx-bus-width = <0x1>;
++		status = "okay";
++	};
++};
++
++&mmc0 { 
++	vmmc-supply = <&reg_dc1sw2>;
++	cd-gpios = <&pio 5 6 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; //PF6
++	bus-width = <4>;
++	status = "okay";
++};
++
++/*
++ *recovery_adc_used :  Module enable pin,    1: Enabled, 0: Disabled
++ *press_mode_enable :  Long/short press mode enable, 1: Enabled, 0: Disabled
++ *                     a) If this mode is enabled, key_work_mode is disabled, and short_press_mode and long_press_mode take effect;
++ *                     the recovery button can trigger two different modes via long press and short press;
++ *                     b) If this mode is disabled, key_work_mode takes effect, and the recovery button can only trigger one mode.
++ *key_work_mode     :  Mode selection
++ *                     0: Flash ROM,
++ *                     1: One-click recovery (U-Boot stage),
++ *                     2: Android recovery,
++ *                     3: Android factory reset.
++ *                     If not set, the default mode is Android Recovery.
++ *short_press_mode  :  Mode triggered by a short press; options are the same as above.
++ *long_press_mode   :  Mode triggered by a long press; options are the same as above.
++ *key_press_time    :  Defines the duration of a long press; unit: milliseconds.
++ *recovery_key      :  Key configuration.
++ */
++
++&adc_boot_recovery {
++	recovery_adc_used = <1>;
++	recovery_adc_channel = <0>; /* vol+ key */
++	press_mode_enable = <1>;
++	short_press_mode = <0x0>;
++	long_press_mode = <0x2>;
++	key_press_time = <2000>;
++	key_min = <9>;
++	key_max = <11>;
++};
++
++&gpadc_boot_recovery {
++	recovery_adc_used = <1>;
++	recovery_adc_channel = <9>; /* recovery key */
++	press_mode_enable = <1>;
++	short_press_mode = <0x0>;
++	long_press_mode = <0x3>;
++	key_press_time = <5000>;
++	key_min = <455>;
++	key_max = <500>;
++};
++
++&serdes {
++	status = "okay";
++	combophy0: combo-phy0@6c01000 {
++		lane_invert = <0 0 0 0>;
++		lane_remap = <2 3 0 1>;
++	};
++};
++
++&sid {
++	sid-supply = <&reg_dldo1>;
++	voltage = <1800>;
++	power_supply = "dldo6";
++};
++
++&pwm4{
++	pinctrl-names = "active","sleep";
++	pinctrl-0 = <&pwm4_pin_active>;
++	pinctrl-1 = <&pwm4_pin_sleep>;
++	status = "okay";
++};
++
++&pwm16 {
++	pinctrl-names = "active","sleep";
++	pinctrl-0 = <&pwm16_pin_active>;
++	pinctrl-1 = <&pwm16_pin_sleep>;
++	status = "disabled";
++};
++
++// &pwm18 {
++// 	pinctrl-names = "active","sleep";
++// 	pinctrl-0 = <&pwm18_pin_active>;
++// 	pinctrl-1 = <&pwm18_pin_sleep>;
++// 	status = "okay";
++// };
++
++&pwm19 {
++	pinctrl-names = "active","sleep";
++	pinctrl-0 = <&pwm19_pin_active>;
++	pinctrl-1 = <&pwm19_pin_sleep>;
++	status = "okay";
++};
++
++&pcie_rc {
++	status = "okay";
++	pcie1v8-supply = <&reg_bldo1>;
++	pcie3v3-supply = <&reg_dcdc1>;
++};
+diff --git a/dts/upstream/src/arm64/allwinner/sun60i-a733-orangepi-4-pro.dts b/dts/upstream/src/arm64/allwinner/sun60i-a733-orangepi-4-pro.dts
+new file mode 100644
+index 00000000000..429fe10ac64
+--- /dev/null
++++ b/dts/upstream/src/arm64/allwinner/sun60i-a733-orangepi-4-pro.dts
+@@ -0,0 +1,373 @@
++/*
++ * Allwinner Technology CO., Ltd. sun60iw2p1 soc board.
++ *
++ * soc board support.
++ */
++
++#include <dt-bindings/gpio/gpio.h>
++#include "sun60i-a733.dtsi"
++
++/ {
++	model = "Orange Pi 4 Pro";
++	compatible = "allwinner,a733", "arm,sun60iw2p1";
++
++	aliases:aliases@45100000 {
++		pwmchip0 = &pwmchip0;
++		pwmchip1 = &pwmchip1;
++		pwmchip2 = &pwmchip2;
++		pwm0 = &pwm0;
++		pwm1 = &pwm1;
++		pwm2 = &pwm2;
++		pwm3 = &pwm3;
++		pwm4 = &pwm4;
++		pwm16 = &pwm16;
++		pwm19 = &pwm19;
++		twi6 = &twi6;
++		pmu0 = &pmu0;
++		spi0 = &spi0;
++		ethernet0 = &gmac0;
++		ethernet1 = &gmac1;
++	};
++};
++
++&platform {
++	eraseflag   = <1>;
++	next_work   = <3>;
++	debug_mode  = <4>;
++};
++
++&target {
++	boot_clock = <1008>;	/*CPU boot frequency, Unit: MHz*/
++	storage_type = <0xffffffff>; /*boot medium, 0-nand, 1-card0, 2-card2, -1(defualt)auto scan*/
++	burn_key = <1>;		/*1:support burn key; 0:not support burn key*/
++	dragonboard_test = <0>;	/*1:support card boot dragonboard; 0:not support card boot dragonboard*/
++};
++
++&power_sply {
++	ntc_status = <2>;
++	battery_exist = <0>;
++};
++
++&charger0 {
++	pmu_safe_vol = <3400>;
++	bat_bmp_type = <1>;
++	ntc_cur = <60>;
++	safe_temp_H = <600>;//60
++	safe_temp_L = <0xFFFFFFCE>;//-5
++	pmu_bat_temp_para1 = <4541>; //Murata -25
++	pmu_bat_temp_para2 = <2762>; //-15
++	pmu_bat_temp_para3 = <2180>; //-10
++	pmu_bat_temp_para4 = <1732>; //-5
++	pmu_bat_temp_para5 = <1386>;//0
++	pmu_bat_temp_para6 = <1117>; //5
++	pmu_bat_temp_para7 = <905>; //10
++	pmu_bat_temp_para8 = <606>; //20
++	pmu_bat_temp_para9 = <414>; //30
++	pmu_bat_temp_para10 = <290>; //40
++	pmu_bat_temp_para11 = <244>; //45
++	pmu_bat_temp_para12 = <205>; //50
++	pmu_bat_temp_para13 = <176>; //55
++	pmu_bat_temp_para14 = <150>; //60
++	pmu_bat_temp_para15 = <111>; //70
++	pmu_bat_temp_para16 = <83>; //80
++};
++
++&twi6 {
++	clock-frequency = <200000>;
++	pinctrl-0 = <&s_twi0_pins_a>;
++	pinctrl-1 = <&s_twi0_pins_b>;
++	twi-supply = <&reg_aldo3>;
++	status = "okay";
++
++	pmu1: pmu@36 {
++		compatible = "x-powers,axp8191";
++		reg = <0x36>;
++		status = "okay";
++		regulator0: regulators@0 {
++			reg_dcdc1: dcdc1 {
++				regulator-name = "axp8191-dcdc1";
++			};
++			reg_dcdc2: dcdc2 {
++				regulator-name = "axp8191-dcdc2";
++			};
++			reg_dcdc3: dcdc3 {
++				regulator-name = "axp8191-dcdc3";
++			};
++			reg_dcdc4: dcdc4 {
++				regulator-name = "axp8191-dcdc4";
++			};
++			reg_dcdc5: dcdc5 {
++				regulator-name = "axp8191-dcdc5";
++			};
++			reg_dcdc6: dcdc6 {
++				regulator-name = "axp8191-dcdc6";
++			};
++			reg_dcdc7: dcdc7 {
++				regulator-name = "axp8191-dcdc7";
++			};
++			reg_dcdc8: dcdc8 {
++				regulator-name = "axp8191-dcdc8";
++			};
++			reg_dcdc9: dcdc9 {
++				regulator-name = "axp8191-dcdc9";
++			};
++			reg_rtcldo: rtcldo {
++				regulator-name = "axp8191-rtcldo";
++			};
++			reg_aldo1: aldo1 {
++				regulator-name = "axp8191-aldo1";
++			};
++			reg_aldo2: aldo2 {
++				regulator-name = "axp8191-aldo2";
++			};
++			reg_aldo3: aldo3 {
++				regulator-name = "axp8191-aldo3";
++			};
++			reg_aldo4: aldo4 {
++				regulator-name = "axp8191-aldo4";
++			};
++			reg_aldo5: aldo5 {
++				regulator-name = "axp8191-aldo5";
++			};
++			reg_aldo6: aldo6 {
++				regulator-name = "axp8191-aldo6";
++			};
++			reg_dldo1: dldo1 {
++				regulator-name = "axp8191-dldo1";
++			};
++			reg_dldo2: dldo2 {
++				regulator-name = "axp8191-dldo2";
++			};
++			reg_dldo3: dldo3 {
++				regulator-name = "axp8191-dldo3";
++			};
++			reg_dldo4: dldo4 {
++				regulator-name = "axp8191-dldo4";
++			};
++			reg_dldo5: dldo5 {
++				regulator-name = "axp8191-dldo5";
++			};
++			reg_dldo6: dldo6 {
++				regulator-name = "axp8191-dldo6";
++			};
++			reg_eldo1: eldo1 {
++				regulator-name = "axp8191-eldo1";
++			};
++			reg_eldo2: eldo2 {
++				regulator-name = "axp8191-eldo2";
++			};
++			reg_eldo3: eldo3 {
++				regulator-name = "axp8191-eldo3";
++			};
++			reg_eldo4: eldo4 {
++				regulator-name = "axp8191-eldo4";
++			};
++			reg_eldo5: eldo5 {
++				regulator-name = "axp8191-eldo5";
++			};
++			reg_eldo6: eldo6 {
++				regulator-name = "axp8191-eldo6";
++			};
++			reg_dc1sw1: dc1sw1 {
++				regulator-name = "axp8191-dc1sw1";
++				swin-supply = <&reg_dcdc1>;
++				regulator-always-on;
++				regulator-boot-on;
++			};
++			reg_dc1sw2: dc1sw2 {
++				regulator-name = "axp8191-dc1sw2";
++				swin-supply = <&reg_dcdc1>;
++				regulator-always-on;
++				regulator-boot-on;
++			};
++		};
++	};
++};
++
++&sdc0_pins_a {
++		allwinner,pins = "PF0", "PF1",
++				 "PF3", "PF4", "PF5";
++		allwinner,function = "sdc0";
++		allwinner,muxsel = <2>;
++		allwinner,drive = <0>;
++		allwinner,pull = <1>;
++};
++
++&sdc0_pins_b {
++		allwinner,pins = "PF2";
++		allwinner,function = "sdc0";
++		allwinner,muxsel = <2>;
++		allwinner,drive = <2>;
++		allwinner,pull = <1>;
++};
++
++&sdc0_pins_c {
++		allwinner,pins = "PF0", "PF1", "PF2",
++		  		 "PF3", "PF4", "PF5";
++		allwinner,function = "uart0_jtag";
++		allwinner,muxsel = <3>;
++		allwinner,drive = <0>;
++		allwinner,pull = <1>;
++};
++
++&sdc2_pins_a {
++		allwinner,pins = "PC6",
++				 "PC8", "PC9", "PC10", "PC11",
++				 "PC13", "PC14", "PC15", "PC16";
++		allwinner,function = "sdc3";
++		allwinner,muxsel = <4>;
++		allwinner,drive = <1>;
++		allwinner,pull = <1>;
++};
++
++&sdc2_pins_b {
++		allwinner,pins = "PC1", "PC5";
++		allwinner,function = "sdc3";
++		allwinner,muxsel = <4>;
++		allwinner,drive = <3>;
++		allwinner,pull = <1>;
++};
++
++&sdc2_pins_c {
++		allwinner,pins = "PC0";
++		allwinner,function = "sdc3";
++		allwinner,muxsel = <4>;
++		allwinner,drive = <3>;
++		allwinner,pull = <2>;
++};
++
++&pwm4_pin_active {
++		allwinner,pins = "PD22";
++		allwinner,function = "pwm0_4";
++		allwinner,muxsel = <0x2>;
++		allwinner,drive = <3>;
++		allwinner,pull = <2>;
++};
++
++&pwm4_pin_sleep {
++		allwinner,pins = "PD22";
++		allwinner,function = "io_disabled";
++		allwinner,muxsel = <0xf>;
++		allwinner,drive = <3>;
++		allwinner,pull = <2>;
++};
++
++&pwm16_pin_active {
++	allwinner,pins = "PI15";
++	allwinner,function = "pwm1_6";
++	allwinner,muxsel = <0x5>;
++	allwinner,drive = <3>;
++	allwinner,pull = <2>;
++};
++
++&pwm16_pin_sleep {
++	allwinner,pins = "PI15";
++	allwinner,function = "io_disabled";
++	allwinner,muxsel = <0xf>;
++	allwinner,drive = <3>;
++	allwinner,pull = <2>;
++};
++
++&pwm19_pin_active {
++	allwinner,pins = "PE15";
++	allwinner,function = "pwm1_9";
++	allwinner,muxsel = <0x5>;
++	allwinner,drive = <3>;
++	allwinner,pull = <2>;
++};
++
++&pwm19_pin_sleep {
++	allwinner,pins = "PE15";
++	allwinner,function = "io_disabled";
++	allwinner,muxsel = <0xf>;
++	allwinner,drive = <3>;
++	allwinner,pull = <2>;
++};
++
++&mmc0 {
++	vmmc-supply = <&reg_dc1sw2>;
++	cd-gpios = <&pio 5 6 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; //PF6
++	bus-width = <4>;
++	status = "okay";
++};
++
++/*
++ *recovery_adc_used :  Module enable pin,    1: Enabled, 0: Disabled
++ *press_mode_enable :  Long/short press mode enable, 1: Enabled, 0: Disabled
++ *                     a) If this mode is enabled, key_work_mode is disabled, and short_press_mode and long_press_mode take effect;
++ *                     the recovery button can trigger two different modes via long press and short press;
++ *                     b) If this mode is disabled, key_work_mode takes effect, and the recovery button can only trigger one mode.
++ *key_work_mode     :  Mode selection
++ *                     0: Flash ROM,
++ *                     1: One-click recovery (U-Boot stage),
++ *                     2: Android recovery,
++ *                     3: Android factory reset.
++ *                     If not set, the default mode is Android Recovery.
++ *short_press_mode  :  Mode triggered by a short press; options are the same as above.
++ *long_press_mode   :  Mode triggered by a long press; options are the same as above.
++ *key_press_time    :  Defines the duration of a long press; unit: milliseconds.
++ *recovery_key      :  Key configuration.
++ */
++
++&adc_boot_recovery {
++	recovery_adc_used = <1>;
++	recovery_adc_channel = <0>; /* vol+ key */
++	press_mode_enable = <1>;
++	short_press_mode = <0x0>;
++	long_press_mode = <0x2>;
++	key_press_time = <2000>;
++	key_min = <9>;
++	key_max = <11>;
++};
++
++&gpadc_boot_recovery {
++	recovery_adc_used = <1>;
++	recovery_adc_channel = <9>; /* recovery key */
++	press_mode_enable = <1>;
++	short_press_mode = <0x0>;
++	long_press_mode = <0x3>;
++	key_press_time = <5000>;
++	key_min = <455>;
++	key_max = <500>;
++};
++
++&serdes {
++	status = "okay";
++	combophy0: combo-phy0@6c01000 {
++		lane_invert = <0 0 0 0>;
++		lane_remap = <2 3 0 1>;
++	};
++};
++
++&pcie_rc {
++	pcie1v8_supply = "dldo2";
++	pcie3v3_supply = "dc1sw2";
++	status = "okay";
++};
++
++&sid {
++	sid-supply = <&reg_dldo6>;
++	voltage = <1800>;
++	power_supply = "dldo6";
++};
++
++&pwm4{
++	pinctrl-names = "active","sleep";
++	pinctrl-0 = <&pwm4_pin_active>;
++	pinctrl-1 = <&pwm4_pin_sleep>;
++	status = "okay";
++};
++
++&pwm16 {
++	pinctrl-names = "active","sleep";
++	pinctrl-0 = <&pwm16_pin_active>;
++	pinctrl-1 = <&pwm16_pin_sleep>;
++	status = "disabled";
++};
++
++&pwm19 {
++	pinctrl-names = "active","sleep";
++	pinctrl-0 = <&pwm19_pin_active>;
++	pinctrl-1 = <&pwm19_pin_sleep>;
++	status = "okay";
++};
+diff --git a/dts/upstream/src/arm64/allwinner/sun60i-a733.dtsi b/dts/upstream/src/arm64/allwinner/sun60i-a733.dtsi
+new file mode 100644
+index 00000000000..722fecfc240
+--- /dev/null
++++ b/dts/upstream/src/arm64/allwinner/sun60i-a733.dtsi
+@@ -0,0 +1,1150 @@
++/dts-v1/;
++
++#include <dt-bindings/interrupt-controller/arm-gic.h>
++//#include <dt-bindings/clock/sun50i-h6-ccu.h>
++//#include <dt-bindings/clock/sun50i-h6-r-ccu.h>
++//#include <dt-bindings/clock/sun6i-rtc.h>
++//#include <dt-bindings/reset/sun50i-h6-ccu.h>
++//#include <dt-bindings/reset/sun50i-h6-r-ccu.h>
++#include <dt-bindings/phy/phy.h>
++#include <dt-bindings/thermal/thermal.h>
++
++/ {
++	interrupt-parent = <&gic>;
++	#address-cells = <2>;
++	#size-cells = <2>;
++
++	clocks {
++		compatible = "allwinner,clk-init";
++		device_type = "clocks";
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++		reg = <0x0 0x02002000 0x0 0x2000>,	/*cpux space*/
++		      <0x0 0x07010000 0x0 0x400>;	/*cpus space*/
++
++			clk_pll_periph0: pll_periph0 {
++				#clock-cells = <0>;
++				compatible = "allwinner,pll-clock";
++				assigned-clock-rates = <600000000>;
++				lock-mode = "new";
++				 clock-output-names = "pll_periph0";
++			 };
++
++			clk_pll_periph0_2x: pll_periph0_2x {
++				#clock-cells = <0>;
++				compatible = "allwinner,pll-clock";
++				lock-mode = "new";
++				clock-output-names = "pll_periph0_2x";
++			};
++
++			clk_pll_periph0_800m: pll_periph0_800m {
++				#clock-cells = <0>;
++				compatible = "allwinner,pll-clock";
++				lock-mode = "new";
++				clock-output-names = "pll_periph0_800m";
++			};
++
++			clk_pll_periph0_600m: pll_periph0_600m {
++				#clock-cells = <0>;
++				compatible = "allwinner,fixed-factor-clock";
++				clocks = <&clk_pll_periph0_2x>;
++				clock-mult = <1>;
++				clock-div = <2>;
++				clock-output-names = "pll_periph0_600m";
++			};
++
++			clk_pll_periph0_480m: pll_periph0_480m {
++				#clock-cells = <0>;
++				compatible = "allwinner,pll-clock";
++				lock-mode = "new";
++				clock-output-names = "pll_periph0_480m";
++			};
++
++			clk_pll_periph0_400m: pll_periph0_400m {
++				#clock-cells = <0>;
++				compatible = "allwinner,fixed-factor-clock";
++				clocks = <&clk_pll_periph0_2x>;
++				clock-mult = <1>;
++				clock-div = <3>;
++				clock-output-names = "pll_periph0_400m";
++			};
++
++			clk_pll_periph0_300m: pll_periph0_300m {
++				#clock-cells = <0>;
++				compatible = "allwinner,fixed-factor-clock";
++				clocks = <&clk_pll_periph0_600m>;
++				clock-mult = <1>;
++				clock-div = <2>;
++				clock-output-names = "pll_periph0_300m";
++			};
++
++			clk_pll_periph0_200m: pll_periph0_200m {
++				#clock-cells = <0>;
++				compatible = "allwinner,fixed-factor-clock";
++				clocks = <&clk_pll_periph0_400m>;
++				clock-mult = <1>;
++				clock-div = <2>;
++				clock-output-names = "pll_periph0_200m";
++			};
++
++			clk_pll_periph0_150m: pll_periph0_150m {
++				#clock-cells = <0>;
++				compatible = "allwinner,fixed-factor-clock";
++				clocks = <&clk_pll_periph0_300m>;
++				clock-mult = <1>;
++				clock-div = <2>;
++				clock-output-names = "pll_periph0_150m";
++			};
++
++			clk_pll_periph1_2x: pll_periph1_2x {
++				#clock-cells = <0>;
++				compatible = "allwinner,pll-clock";
++				lock-mode = "new";
++				clock-output-names = "pll_periph1_2x";
++			};
++
++			clk_pll_periph1_800m: pll_periph1_800m {
++				#clock-cells = <0>;
++				compatible = "allwinner,pll-clock";
++				lock-mode = "new";
++				clock-output-names = "pll_periph1_800m";
++			};
++
++			clk_pll_periph1_600m: pll_periph1_600m {
++				#clock-cells = <0>;
++				compatible = "allwinner,fixed-factor-clock";
++				clocks = <&clk_pll_periph1_2x>;
++				clock-mult = <1>;
++				clock-div = <2>;
++				clock-output-names = "pll_periph1_600m";
++			};
++
++			clk_pll_periph1_400m: pll_periph1_400m {
++				#clock-cells = <0>;
++				compatible = "allwinner,fixed-factor-clock";
++				clocks = <&clk_pll_periph1_2x>;
++				clock-mult = <1>;
++				clock-div = <3>;
++				clock-output-names = "pll_periph1_400m";
++			};
++
++			clk_pll_periph1_300m: pll_periph1_300m {
++				#clock-cells = <0>;
++				compatible = "allwinner,fixed-factor-clock";
++				clocks = <&clk_pll_periph1_600m>;
++				clock-mult = <1>;
++				clock-div = <2>;
++				clock-output-names = "pll_periph1_300m";
++			};
++
++			clk_pll_video2: pll_video2 {
++				#clock-cells = <0>;
++				compatible = "allwinner,pll-clock";
++				lock-mode = "new";
++				clock-output-names = "pll_video2";
++			};
++
++			clk_pll_periph0x2: pll_periph0x2 {
++				#clock-cells = <0>;
++				compatible = "allwinner,fixed-factor-clock";
++				clocks = <&clk_pll_periph0>;
++				clock-mult = <2>;
++				clock-div = <1>;
++				clock-output-names = "pll_periph0x2";
++			};
++
++			clk_sdmmc0_mod: sdmmc0_mod {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "sdmmc0_mod";
++			};
++
++			clk_sdmmc0_bus: sdmmc0_bus {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "sdmmc0_bus";
++			};
++
++			clk_sdmmc0_rst: sdmmc0_rst {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "sdmmc0_rst";
++			};
++
++			clk_sdmmc2_mod: sdmmc2_mod {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "sdmmc2_mod";
++			};
++
++			clk_sdmmc2_bus: sdmmc2_bus {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "sdmmc2_bus";
++			};
++
++			clk_sdmmc2_rst: sdmmc2_rst {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "sdmmc2_rst";
++			};
++
++			clk_sdmmc3_mod: sdmmc3_mod {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "sdmmc3_mod";
++			};
++
++			clk_serdes_phy_cfgv: serdes_phy_cfg {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "serdes_phy_cfg";
++			};
++
++			clk_dcxo_serdes0_gate: dcxo_serdes0_gate {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "dcxo_serdes0_gate";
++			};
++
++			clk_dcxo_serdes1_gate: dcxo_serdes1_gate {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "dcxo_serdes1_gate";
++			};
++
++			clk_gmac0: gmac0 {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "gmac0";
++			};
++
++			clk_gmac0_axi: gmac0_axi {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "gmac0_axi";
++			};
++
++			clk_gmac1: gmac1 {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "gmac1";
++			};
++
++			clk_gmac1_axi: gmac1_axi {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "gmac1_axi";
++			};
++
++			clk_gmac0_mbus: gmac0_mbus {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "gmac0_mbus";
++			};
++
++			clk_gmac1_mbus: gmac1_mbus {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "gmac1_mbus";
++			};
++
++			clk_gmac0_phy: gmac0_phy {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "gmac0_phy";
++				assigned-clock-parents = <&clk_pll_periph0_150m>;
++				assigned-clock-rates = <25000000>;
++				assigned-clocks = <&clk_gmac0_phy>;
++
++			};
++
++			clk_gmac1_phy: gmac1_phy {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "gmac1_phy";
++				assigned-clock-parents = <&clk_pll_periph0_150m>;
++				assigned-clock-rates = <25000000>;
++				assigned-clocks = <&clk_gmac1_phy>;
++			};
++
++			clk_gmac_ptp: gmac_ptp {
++				#clock-cells = <0>;
++				compatible = "allwinner,periph-clock";
++				clock-output-names = "gmac_ptp";
++			};
++	};
++
++	cpus {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		/* --- LITTLE CLUSTER: 6x Cortex-A55 --- */
++		cpu0: cpu@0 {
++			compatible = "arm,cortex-a55";
++			device_type = "cpu";
++			reg = <0>;
++			enable-method = "psci";
++			clocks = <&cpupll_ccu 0>; //Originally CLK_CPUX
++			#cooling-cells = <2>;
++			i-cache-size = <0x8000>;  /* 32 KiB */
++			i-cache-line-size = <64>;
++			d-cache-size = <0x8000>;  /* 32 KiB */
++			d-cache-line-size = <64>;
++			next-level-cache = <&l2_cache_l0>;
++		};
++
++		cpu1: cpu@1 {
++			compatible = "arm,cortex-a55";
++			device_type = "cpu";
++			reg = <1>;
++			enable-method = "psci";
++			clocks = <&cpupll_ccu 0>;
++			#cooling-cells = <2>;
++			i-cache-size = <0x8000>;
++			i-cache-line-size = <64>;
++			d-cache-size = <0x8000>;
++			d-cache-line-size = <64>;
++			next-level-cache = <&l2_cache_l1>;
++		};
++
++		cpu2: cpu@2 {
++			compatible = "arm,cortex-a55";
++			device_type = "cpu";
++			reg = <2>;
++			enable-method = "psci";
++			clocks = <&cpupll_ccu 0>;
++			#cooling-cells = <2>;
++			i-cache-size = <0x8000>;
++			i-cache-line-size = <64>;
++			d-cache-size = <0x8000>;
++			d-cache-line-size = <64>;
++			next-level-cache = <&l2_cache_l2>;
++		};
++
++		cpu3: cpu@3 {
++			compatible = "arm,cortex-a55";
++			device_type = "cpu";
++			reg = <3>;
++			enable-method = "psci";
++			clocks = <&cpupll_ccu 0>;
++			#cooling-cells = <2>;
++			i-cache-size = <0x8000>;
++			i-cache-line-size = <64>;
++			d-cache-size = <0x8000>;
++			d-cache-line-size = <64>;
++			next-level-cache = <&l2_cache_l3>;
++		};
++
++		cpu4: cpu@4 {
++			compatible = "arm,cortex-a55";
++			device_type = "cpu";
++			reg = <4>;
++			enable-method = "psci";
++			clocks = <&cpupll_ccu 0>;
++			#cooling-cells = <2>;
++			i-cache-size = <0x8000>;
++			i-cache-line-size = <64>;
++			d-cache-size = <0x8000>;
++			d-cache-line-size = <64>;
++			next-level-cache = <&l2_cache_l4>;
++		};
++
++		cpu5: cpu@5 {
++			compatible = "arm,cortex-a55";
++			device_type = "cpu";
++			reg = <5>;
++			enable-method = "psci";
++			clocks = <&cpupll_ccu 0>;
++			#cooling-cells = <2>;
++			i-cache-size = <0x8000>;
++			i-cache-line-size = <64>;
++			d-cache-size = <0x8000>;
++			d-cache-line-size = <64>;
++			next-level-cache = <&l2_cache_l5>;
++		};
++
++		/* --- BIG CLUSTER: 2x Cortex-A76 --- */
++		cpu6: cpu@6 {
++			compatible = "arm,cortex-a76";
++			device_type = "cpu";
++			reg = <6>;
++			enable-method = "psci";
++			clocks = <&cpupll_ccu 0>; /* Ggf. ein anderer Clock für Big Cluster */
++			#cooling-cells = <2>;
++			i-cache-size = <0x10000>; /* 64 KiB */
++			i-cache-line-size = <64>;
++			d-cache-size = <0x10000>; /* 64 KiB */
++			d-cache-line-size = <64>;
++			next-level-cache = <&l2_cache_b0>;
++		};
++
++		cpu7: cpu@7 {
++			compatible = "arm,cortex-a76";
++			device_type = "cpu";
++			reg = <7>;
++			enable-method = "psci";
++			clocks = <&cpupll_ccu 0>; /* Ggf. ein anderer Clock für Big Cluster */
++			#cooling-cells = <2>;
++			i-cache-size = <0x10000>;
++			i-cache-line-size = <64>;
++			d-cache-size = <0x10000>;
++			d-cache-line-size = <64>;
++			next-level-cache = <&l2_cache_b1>;
++		};
++
++		/* --- L2 CACHES (Private per Core) --- */
++		l2_cache_l0: l2-cache-l0 {
++			compatible = "cache";
++			cache-level = <2>;
++			cache-unified;
++			cache-size = <0x20000>; /* 128 KiB für A55 */
++			cache-line-size = <64>;
++			next-level-cache = <&l3_cache>;
++		};
++
++		l2_cache_l1: l2-cache-l1 {
++			compatible = "cache";
++			cache-level = <2>;
++			cache-unified;
++			cache-size = <0x20000>;
++			cache-line-size = <64>;
++			next-level-cache = <&l3_cache>;
++		};
++
++		l2_cache_l2: l2-cache-l2 {
++			compatible = "cache";
++			cache-level = <2>;
++			cache-unified;
++			cache-size = <0x20000>;
++			cache-line-size = <64>;
++			next-level-cache = <&l3_cache>;
++		};
++
++		l2_cache_l3: l2-cache-l3 {
++			compatible = "cache";
++			cache-level = <2>;
++			cache-unified;
++			cache-size = <0x20000>;
++			cache-line-size = <64>;
++			next-level-cache = <&l3_cache>;
++		};
++
++		l2_cache_l4: l2-cache-l4 {
++			compatible = "cache";
++			cache-level = <2>;
++			cache-unified;
++			cache-size = <0x20000>;
++			cache-line-size = <64>;
++			next-level-cache = <&l3_cache>;
++		};
++
++		l2_cache_l5: l2-cache-l5 {
++			compatible = "cache";
++			cache-level = <2>;
++			cache-unified;
++			cache-size = <0x20000>;
++			cache-line-size = <64>;
++			next-level-cache = <&l3_cache>;
++		};
++
++		l2_cache_b0: l2-cache-b0 {
++			compatible = "cache";
++			cache-level = <2>;
++			cache-unified;
++			cache-size = <0x40000>; /* 256 KiB für A76 */
++			cache-line-size = <64>;
++			next-level-cache = <&l3_cache>;
++		};
++
++		l2_cache_b1: l2-cache-b1 {
++			compatible = "cache";
++			cache-level = <2>;
++			cache-unified;
++			cache-size = <0x40000>;
++			cache-line-size = <64>;
++			next-level-cache = <&l3_cache>;
++		};
++
++		/* --- L3 CACHE (Shared by all cores) --- */
++		l3_cache: l3-cache {
++			compatible = "cache";
++			cache-level = <3>;
++			cache-unified;
++			cache-size = <0x100000>; /* 1 MiB */
++			cache-line-size = <64>;
++		};
++	};
++
++	soc: soc@29000000 {
++		compatible = "simple-bus";
++		#address-cells = <2>;
++		#size-cells = <2>;
++		power_sply:power_sply@4500000c {
++			device_type = "power_sply";
++
++		};
++
++		power_delay:power_delay@4500024 {
++			device_type = "power_delay";
++		};
++
++		platform:platform@45000004 {
++			device_type = "platform";
++
++		};
++
++		target:target@45000008 {
++			device_type = "target";
++
++		};
++
++		charger0:charger0@45000010 {
++			device_type = "charger0";
++
++		};
++		card_boot:card_boot@45000014 {
++			device_type = "card_boot";
++			logical_start   = <40960>;
++			/* sprite_gpio0 = <&pio PI 9 1 0xffffffff 0xffffffff 1>; */
++			boot_work_delay = <130>;
++			boot_work_times = <3>;
++			sprite_gpio0 = <&pio 0x8 0x9 0x1 0xffffffff 0xffffffff 0x0>;
++		};
++
++		gpio_bias:gpio_bias@45000018 {
++			device_type = "gpio_bias";
++		};
++
++		fastboot_key:fastboot_key@4500001c {
++			device_type = "fastboot_key";
++			key_max = <42>;
++			key_min = <38>;
++		};
++
++		recovery_key:recovery_key@45000020 {
++			device_type = "recovery_key";
++			key_max = <31>;
++			key_min = <28>;
++		};
++
++		adc_boot_recovery:adc_boot_recovery@45000024 {
++			device_type = "adc_boot_recovery";
++		};
++
++		gpadc_boot_recovery:gpadc_boot_recovery@45000024 {
++			device_type = "gpadc_boot_recovery";
++		};
++
++		key_boot_recovery:key_boot_recovery@45000028 {
++			device_type = "key_boot_recovery";
++		};
++
++               rtc_ccu: rtc_ccu@7090000 {
++                       compatible = "allwinner,sun60iw2-rtc-ccu";
++                       reg = <0x0 0x7090000 0x0 0x400>;
++                       #clock-cells = <1>;
++                       #reset-cells = <1>;
++               };
++
++		cpupll_ccu: clock-controller@8870000 {
++		        compatible = "allwinner,sun60iw2-cpupll";
++		        reg = <0x0 0x08870000 0x0 0x3034>;
++		        clocks = <&rtc_ccu 0>; //originally CLK_DCXO
++		        clock-names = "dcxo";
++		        #clock-cells = <1>;
++		        #reset-cells = <1>;
++		};
++
++		pio: pinctrl@0300b000 {
++			compatible = "allwinner,sun60iw2p1-pinctrl";
++			device_type = "pio";
++			gpio-controller;
++			#size-cells = <0>;
++			#gpio-cells = <3>;
++			/* takes the debounce time in usec as argument */
++			input-debounce = <0 0 0 0 0 0 0 0 0>;
++
++			sdc0_pins_a: sdc0@0 {
++			};
++
++			sdc0_pins_b: sdc0@1 {
++			};
++
++			sdc0_pins_c: sdc0@2 {
++			};
++
++			sdc2_pins_a: sdc2@0 {
++			};
++
++			sdc2_pins_b: sdc2@1 {
++			};
++
++			sdc2_pins_c: sdc2@2 {
++			};
++
++			nand0_pins_a: nand0@0 {
++			};
++
++			nand0_pins_b: nand0@1 {
++			};
++
++			nand0_pins_c: nand0@2 {
++			};
++
++			spi0_pins_a: spi0@0 {
++			};
++
++			spi0_pins_b: spi0@1 {
++			};
++
++			spi0_pins_c: spi0@2 {
++			};
++
++			spif_pins_a: spif@0 {
++			};
++
++			spif_pins_b: spif@1 {
++			};
++
++			spif_pins_c: spif@2 {
++			};
++
++			twi6: s_twi@0x07083000 {
++				pmu0: pmu@34 {
++				};
++			};
++
++			pwm0_pin_active: pwm0@0 {
++			};
++
++			pwm0_pin_sleep: pwm0@1 {
++			};
++
++			pwm1_pin_active: pwm1@0 {
++			};
++
++			pwm1_pin_sleep: pwm1@1 {
++			};
++
++			pwm2_pin_active: pwm2@0 {
++			};
++
++			pwm2_pin_sleep: pwm2@1 {
++			};
++
++			pwm3_pin_active: pwm3@0 {
++			};
++
++			pwm3_pin_sleep: pwm3@1 {
++			};
++
++			pwm4_pin_active: pwm4@0 {
++			};
++
++			pwm4_pin_sleep: pwm4@1 {
++			};
++
++			pwm16_pin_active: pwm16@0 {
++			};
++
++			pwm16_pin_sleep: pwm16@1 {
++			};
++
++			pwm19_pin_active: pwm19@0 {
++			};
++
++			pwm19_pin_sleep: pwm19@1 {
++			};
++			gmac0_pins_default: gmac0@0 {
++			};
++			gmac0_pins_sleep: gmac0@1 {
++			};
++			gmac1_pins_default: gmac1@0 {
++			};
++			gmac1_pins_sleep: gmac1@1 {
++			};
++		};
++
++		r_pio: pinctrl@7025000 {
++			compatible = "allwinner,sun60iw2-r-pinctrl"; /* <-- Das verknüpft den C-Treiber! */
++				device_type = "r_pio";
++				gpio-controller;
++				#size-cells = <0>;
++				#gpio-cells = <3>;
++
++			s_twi0_pins_a: s_twi0@0 {
++				allwinner,pins = "PL0", "PL1";
++				allwinner,pname = "s_twi0_scl", "s_twi0_sda";
++				allwinner,function = "s_twi0";
++				allwinner,muxsel = <2>;
++				allwinner,drive = <1>;
++				allwinner,pull = <1>;
++			};
++
++			s_twi0_pins_b: s_twi0@1 {
++				allwinner,pins = "PL0", "PL1";
++				allwinner,function = "gpio_out";
++				allwinner,muxsel = <1>;
++				allwinner,drive = <1>;
++				allwinner,pull = <1>;
++			};
++		};
++
++		pwmchip0: pwmchip0@2527000 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm";
++			reg = <0x0 0x02527000 0x0 0x400>;
++			pwm-number = <10>;
++			pwm-base = <0x0>;
++			sunxi-pwms = <&pwm0>, <&pwm1>, <&pwm2>, <&pwm3>, <&pwm4>,
++			<&pwm5>, <&pwm6>, <&pwm7>, <&pwm8>, <&pwm9>;
++		};
++
++		pwm0: pwm0@2527010 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm0";
++			reg = <0x0 0x02527010 0x0 0x4>;
++			reg_base = <0x02527000>;
++			status = "disabled";
++		};
++
++		pwm1: pwm1@2527011 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm1";
++			reg = <0x0 0x02527011 0x0 0x4>;
++			reg_base = <0x02527000>;
++			status = "disabled";
++		};
++
++		pwm2: pwm2@2527012 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm2";
++			reg = <0x0 0x02527012 0x0 0x4>;
++			reg_base = <0x02527000>;
++			status = "disabled";
++		};
++
++		pwm3: pwm3@2527013 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm3";
++			reg = <0x0 0x02527013 0x0 0x4>;
++			reg_base = <0x02527000>;
++			status = "disabled";
++		};
++
++		pwm4: pwm4@2527014 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm4";
++			reg = <0x0 0x02527014 0x0 0x4>;
++			reg_base = <0x02527000>;
++			status = "disabled";
++		};
++
++		pwm5: pwm5@2527015 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm5";
++			reg = <0x0 0x02527015 0x0 0x4>;
++			reg_base = <0x02527000>;
++			status = "disabled";
++		};
++
++		pwm6: pwm6@2527016 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm6";
++			reg = <0x0 0x02527016 0x0 0x4>;
++			reg_base = <0x02527000>;
++			status = "disabled";
++		};
++
++		pwm7: pwm7@2527017 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm7";
++			reg = <0x0 0x02527017 0x0 0x4>;
++			reg_base = <0x02527000>;
++			status = "disabled";
++		};
++
++		pwm8: pwm8@2527018 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm8";
++			reg = <0x0 0x02527018 0x0 0x4>;
++			reg_base = <0x02527000>;
++			status = "disabled";
++		};
++
++		pwm9: pwm9@2527019 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm9";
++			reg = <0x0 0x02527019 0x0 0x4>;
++			reg_base = <0x02527000>;
++			status = "disabled";
++		};
++
++		pwmchip1: pwmchip1@2528000 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm";
++			reg = <0x0 0x02528000 0x0 0x400>;
++			pwm-number = <10>;
++			pwm-base = <0xa>;
++			sunxi-pwms = <&pwm10>, <&pwm11>, <&pwm12>, <&pwm13>, <&pwm14>,
++			<&pwm15>, <&pwm16>, <&pwm17>, <&pwm18>, <&pwm19>;
++		};
++
++		pwm10: pwm10@2528010 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm10";
++			reg = <0x0 0x02528010 0x0 0x4>;
++			reg_base = <0x02528000>;
++			status = "disabled";
++		};
++
++		pwm11: pwm11@2528011 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm11";
++			reg = <0x0 0x02528011 0x0 0x4>;
++			reg_base = <0x02528000>;
++			status = "disabled";
++		};
++
++		pwm12: pwm12@2528012 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm12";
++			reg = <0x0 0x02528012 0x0 0x4>;
++			reg_base = <0x02528000>;
++			status = "disabled";
++		};
++
++		pwm13: pwm13@2528013 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm13";
++			reg = <0x0 0x02528013 0x0 0x4>;
++			reg_base = <0x02528000>;
++			status = "disabled";
++		};
++
++		pwm14: pwm14@2528014 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm14";
++			reg = <0x0 0x02528014 0x0 0x4>;
++			reg_base = <0x02528000>;
++			status = "disabled";
++		};
++
++		pwm15: pwm15@2528015 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm15";
++			reg = <0x0 0x02528015 0x0 0x4>;
++			reg_base = <0x02528000>;
++			status = "disabled";
++		};
++
++		pwm16: pwm16@2528016 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm16";
++			reg = <0x0 0x02528016 0x0 0x4>;
++			reg_base = <0x02528000>;
++			status = "disabled";
++		};
++
++		pwm17: pwm17@2528017 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm17";
++			reg = <0x0 0x02528017 0x0 0x4>;
++			reg_base = <0x02528000>;
++			status = "disabled";
++		};
++
++		pwm18: pwm18@2528018 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm18";
++			reg = <0x0 0x02528018 0x0 0x4>;
++			reg_base = <0x02528000>;
++			status = "disabled";
++		};
++
++		pwm19: pwm19@2528019 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm19";
++			reg = <0x0 0x02528019 0x0 0x4>;
++			reg_base = <0x02528000>;
++			status = "disabled";
++		};
++
++		pwmchip2: spwm0@7023000 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm";
++			reg = <0x0 0x07023000 0x0 0x400>;
++			pwm-number = <10>;
++			pwm-base = <0x14>;
++			sunxi-pwms = <&pwm20>, <&pwm21>, <&pwm22>, <&pwm23>, <&pwm24>,
++			<&pwm25>, <&pwm26>, <&pwm27>, <&pwm28>, <&pwm29>;
++		};
++
++		pwm20: pwm20@7023010 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm20";
++			reg = <0x0 0x07023010 0x0 0x4>;
++			reg_base = <0x07023000>;
++			status = "disabled";
++		};
++
++		pwm21: pwm21@7023011 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm21";
++			reg = <0x0 0x07023011 0x0 0x4>;
++			reg_base = <0x07023000>;
++			status = "disabled";
++		};
++
++		pwm22: pwm22@7023012 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm22";
++			reg = <0x0 0x07023012 0x0 0x4>;
++			reg_base = <0x07023000>;
++			status = "disabled";
++		};
++
++		pwm23: pwm23@7023013 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm23";
++			reg = <0x0 0x07023013 0x0 0x4>;
++			reg_base = <0x07023000>;
++			status = "disabled";
++		};
++
++		pwm24: pwm24@7023014 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm24";
++			reg = <0x0 0x07023014 0x0 0x4>;
++			reg_base = <0x07023000>;
++			status = "disabled";
++		};
++
++		pwm25: pwm25@7023015 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm25";
++			reg = <0x0 0x07023015 0x0 0x4>;
++			reg_base = <0x07023000>;
++			status = "disabled";
++		};
++
++		pwm26: pwm26@7023016 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm26";
++			reg = <0x0 0x07023016 0x0 0x4>;
++			reg_base = <0x07023000>;
++			status = "disabled";
++		};
++
++		pwm27: pwm27@7023017 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm27";
++			reg = <0x0 0x07023017 0x0 0x4>;
++			reg_base = <0x07023000>;
++			status = "disabled";
++		};
++
++		pwm28: pwm28@7023018 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm28";
++			reg = <0x0 0x07023018 0x0 0x4>;
++			reg_base = <0x07023000>;
++			status = "disabled";
++		};
++
++		pwm29: pwm29@7023019 {
++			#pwm-cells = <0x3>;
++			compatible = "allwinner,sunxi-pwm29";
++			reg = <0x0 0x07023019 0x0 0x4>;
++			reg_base = <0x07023000>;
++			status = "disabled";
++		};
++
++		sid: sid@3006000 {
++			device_type = "sid";
++		};
++
++		nand0:nand0@04011000 {
++			device_type = "nand0";
++		};
++
++		spi0: spi@2540000 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			compatible = "allwinner,sun20i-spi";
++			device_type = "spi0";
++			reg = <0x0 0x02540000 0x0 0x300>;
++			//interrupts-extended = <&plic0 31 IRQ_TYPE_LEVEL_HIGH>;
++			//clocks = <&cpupll_ccu CLK_PLL_PERIPH0>, <&cpupll_ccu CLK_SPI0>, <&cpupll_ccu CLK_BUS_SPI0>;
++			//clock-names = "pll", "mod", "bus";
++			//resets = <&cpupll_ccu RST_BUS_SPI0>;
++		};
++
++		spif: spif@4f00000 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			compatible = "allwinner,sun55i-spif";
++			device_type = "spif";
++			reg = <0x0 0x047f0000 0x0 0x1000>;
++			//interrupts-extended = <&plic0 19 IRQ_TYPE_LEVEL_HIGH>;
++			//clocks = <&cpupll_ccu CLK_PLL_PERIPH0>, <&cpupll_ccu CLK_SPIF>, <&cpupll_ccu CLK_BUS_SPIF>;
++			//clock-names = "pll", "mod", "bus";
++			//resets = <&cpupll_ccu RST_BUS_SPIF>;
++		};
++
++		serdes: serdes@6c00000 {
++			  compatible = "allwinner,cadence-combophy";
++			  reg = <0x0 0x06c00000 0x0 0x400>, /* serdes top register part-1 */
++					<0x0 0x06c06000 0x0 0x2000>, /* serdes top register part-2 */
++					<0x0 0x0709016c 0x0 0x4>; /* sys-rtc */
++			  clocks = <&clk_serdes_phy_cfgv>,
++					   <&clk_dcxo_serdes0_gate>,
++					   <&clk_dcxo_serdes1_gate>;
++			  clock-names = "serdes-clk",
++					   "dcxo-serdes0-clk",
++					   "dcxo-serdes1-clk";
++			  #address-cells = <2>;
++			  #size-cells = <2>;
++			  ranges;
++			  status = "disabled";
++
++			  combophy0: combo-phy0@6c01000 {
++				  reg = <0x0 0x06c01000 0x0 0xa00>, /* combophy0 top register */
++						<0x0 0x06c80000 0x0 0x20000>; /* combophy0 phy register*/
++				  #phy-cells = <1>;
++			  };
++
++			  combophy1: combo-phy1@6c02000 {
++				  reg = <0x0 0x06c02000 0x0 0xa00>, /* combophy1 top register */
++						<0x0 0x06ca0000 0x0 0x20000>; /* combophy1 phy register*/
++				  #phy-cells = <1>;
++			  };
++
++			  aux_hpd: aux-hpd@6c01e00 {
++				  reg = <0x0 0x06c01e00 0x0 0x200>; /* aux_hpd top register */
++				  #phy-cells = <1>;
++			  };
++		};
++
++		mmc0: mmc@4020000 {
++			compatible = "allwinner,sun55i-a523-mmc",
++				     "allwinner,sun20i-d1-mmc";
++			reg = <0x0 0x04020000 0x0 0x1000>;
++			clocks = <&clk_sdmmc0_bus>, <&clk_sdmmc0_mod>; //<&ccu CLK_BUS_SMHC0>, <&ccu CLK_SMHC0>
++			clock-names = "ahb", "mmc";
++			resets = <&clk_sdmmc0_rst>; //<&ccu RST_BUS_SMHC0>
++			reset-names = "ahb";
++			interrupts = <GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>;
++			pinctrl-names = "default";
++			pinctrl-0 = <&sdc0_pins_a &sdc0_pins_b>;
++			status = "disabled";
++
++			max-frequency = <150000000>;
++			cap-sd-highspeed;
++			cap-mmc-highspeed;
++			cap-sdio-irq;
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		mmc2: mmc@4022000 {
++			compatible = "allwinner,sun55i-a523-mmc",
++				     "allwinner,sun20i-d1-mmc";
++			reg = <0x0 0x04022000 0x0 0x1000>;
++			clocks = <&clk_sdmmc2_bus>, <&clk_sdmmc2_mod>; //<&ccu CLK_BUS_SMHC2>, <&ccu CLK_SMHC2>
++			clock-names = "ahb", "mmc";
++			resets = <&clk_sdmmc2_rst>; //<&ccu RST_BUS_SMHC2>
++			reset-names = "ahb";
++			interrupts = <GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>;
++			pinctrl-names = "default";
++			pinctrl-0 = <&sdc2_pins_a &sdc2_pins_c &sdc2_pins_b>;
++			status = "disabled";
++
++			max-frequency = <150000000>;
++			cap-sd-highspeed;
++			cap-mmc-highspeed;
++			cap-sdio-irq;
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		pcie_rc: pcie@6000000 {
++			compatible = "allwinner,sunxi-pcie-v300-rc";
++			#address-cells = <3>;
++			#size-cells = <2>;
++			bus-range = <0x0 0xff>;
++			reg = <0 0x06000000 0 0x480000>;
++			reg-names = "dbi";
++			device_type = "pci";
++			ranges = <0x00000800 0 0x20000000 0x0 0x20000000 0 0x01000000
++				  0x81000000 0 0x21000000 0x0 0x21000000 0 0x01000000
++				  0x82000000 0 0x22000000 0x0 0x22000000 0 0x0e000000>;
++			num-lanes = <1>;
++			phys = <&combophy1 PHY_TYPE_PCIE>;
++			phy-names = "pcie-phy";
++			#interrupt-cells = <1>;
++			num-edma = <4>;
++			max-link-speed = <3>;
++			num-ib-windows = <16>;
++			num-ob-windows = <16>;
++			linux,pci-domain = <0>;
++			status = "disabled";
++		};
++
++		gmac0: ethernet@4500000 {
++			compatible = "allwinner,sunxi-gmac";
++			reg = <0x0 0x04500000 0x0 0x8000>,
++			      <0x0 0x04508000 0x0 0x8000>;
++			clocks = <&clk_gmac0_mbus>, <&clk_gmac0_axi>, <&clk_gmac0>, <&clk_gmac0_phy>;
++			clock-names = "pclk", "axi", "ahb", "phy";
++			aw,gmac-version = "210";
++			phy-handle = <&phy0>;
++			status = "disabled";
++
++			mdio0: mdio0 {
++				#address-cells = <1>;
++				#size-cells = <0>;
++				compatible = "snps,dwmac-mdio";
++				phy0: ethernet-phy@0 {
++					reg = <0x1>;
++				};
++			};
++		};
++
++		gmac1: ethernet@4510000 {
++			compatible = "allwinner,sunxi-gmac";
++			reg = <0x0 0x04510000 0x0 0x8000>,
++			      <0x0 0x04518000 0x0 0x8000>;
++			clocks = <&clk_gmac1_mbus>, <&clk_gmac1_axi>, <&clk_gmac1>, <&clk_gmac1_phy>;
++			clock-names = "pclk", "axi", "ahb", "phy";
++			aw,gmac-version = "210";
++			phy-handle = <&phy1>;
++			status = "disabled";
++
++			mdio1: mdio1 {
++				#address-cells = <1>;
++				#size-cells = <0>;
++				compatible = "snps,dwmac-mdio";
++				phy1: ethernet-phy@1 {
++					reg = <0x1>;
++				};
++			};
++		};
++
++		gic: interrupt-controller@3020000 {
++			compatible = "arm,cortex-a15-gic", "arm,cortex-a9-gic";
++			#interrupt-cells = <3>;
++			#address-cells = <0>;
++			device_type = "gic";
++			interrupt-controller;
++			reg = <0x0 0x03021000 0 0x1000>, /* GIC Dist */
++			      <0x0 0x03022000 0 0x2000>, /* GIC CPU */
++			      <0x0 0x03024000 0 0x2000>, /* GIC VCPU Control */
++			      <0x0 0x03026000 0 0x2000>; /* GIC VCPU */
++			interrupts = <GIC_PPI 9 0xf04>;  /* GIC Maintenence IRQ */
++			interrupt-parent = <&gic>;
++		};
++	};
++};
+diff --git a/include/configs/sun60i.h b/include/configs/sun60i.h
+new file mode 100644
+index 00000000000..70649366c1c
+--- /dev/null
++++ b/include/configs/sun60i.h
+@@ -0,0 +1,11 @@
++/* SPDX-License-Identifier: GPL-2.0+ */
++/*
++ * Placeholder wrapper to allow addressing Allwinner devices with Cortex-A55
++ * cores separately. Please do not add anything in here.
++ */
++#ifndef __CONFIG_H
++#define __CONFIG_H
++
++#include <configs/sunxi-common.h>
++
++#endif /* __CONFIG_H */
+diff --git a/arch/arm/mach-sunxi/Kconfig b/arch/arm/mach-sunxi/Kconfig
+index e979ee4a2cc..249b46623cb 100644
+--- a/arch/arm/mach-sunxi/Kconfig
++++ b/arch/arm/mach-sunxi/Kconfig
+@@ -59,10 +59,15 @@ config DRAM_SUN50I_A133
+ 
+ config DRAM_SUN55I_A523
+ 	bool
+ 	help
+ 	  Select this DRAM controller driver for A523/T527 SoCs.
++	  
++config DRAM_SUN60I_A733
++	bool
++	help
++	  Select this DRAM controller driver for A733 SoCs.
+ 
+ if DRAM_SUN50I_H616 || DRAM_SUN50I_A133 || DRAM_SUN55I_A523
+ config DRAM_SUNXI_DX_ODT
+ 	hex "DRAM DX ODT parameter"
+ 	help
+@@ -225,11 +230,11 @@ config SUNXI_SRAM_ADDRESS
+ 
+ config SUNXI_RVBAR_ADDRESS
+ 	hex
+ 	depends on ARM64
+ 	default 0x08100040 if MACH_SUN50I_A133
+-	default 0x08000040 if MACH_SUN55I_A523
++	default 0x08000040 if MACH_SUN55I_A523 || MACH_SUN60I_A733
+ 	default 0x09010040 if SUN50I_GEN_H6
+ 	default 0x017000a0
+ 	---help---
+ 	The read-only RVBAR system register holds the address of the first
+ 	instruction to execute after a reset. Allwinner cores provide a
+@@ -336,11 +341,11 @@ config MACH_SUNXI_H3_H5
+ 	select SUPPORT_SPL
+ 
+ # TODO: try out A80's 8GiB DRAM space
+ config SUNXI_DRAM_MAX_SIZE
+ 	hex
+-	default 0x100000000 if MACH_SUN50I_H616 || MACH_SUN50I_A133 || MACH_SUN55I_A523
++	default 0x100000000 if MACH_SUN50I_H616 || MACH_SUN50I_A133 || MACH_SUN55I_A523 || MACH_SUN60I_A733
+ 	default 0xC0000000 if MACH_SUN50I || MACH_SUN50I_H5 || MACH_SUN50I_H6
+ 	default 0x80000000
+ 
+ choice
+ 	prompt "Sunxi SoC Variant"
+@@ -550,10 +555,20 @@ config MACH_SUN55I_A523
+ 	select SUNXI_NEW_PINCTRL
+ 	select DRAM_SUN55I_A523
+ 	select FIT
+ 	select SPL_LOAD_FIT if SPL
+ 	imply OF_UPSTREAM
++		
++config MACH_SUN60I_A733
++	bool "sun60i (Allwinner A733)"
++	select ARM64
++	select SUNXI_GEN_NCAT2
++	select SUNXI_NEW_PINCTRL
++	select DRAM_SUN60I_A733
++	select FIT
++	select SPL_LOAD_FIT if SPL
++	imply OF_UPSTREAM
+ 
+ endchoice
+ 
+ # The sun8i SoCs share a lot, this helps to avoid a lot of "if A23 || A33"
+ config MACH_SUN8I
+@@ -588,11 +603,11 @@ config ARM_BOOT_HOOK_RMR
+ 	chosen to be a NOP in one mode and a branch in the other, so the
+ 	code would only be executed if not already in AArch64.
+ 	This allows both the SPL and the U-Boot proper to be entered in
+ 	either mode and switch to AArch64 if needed.
+ 
+-if SUNXI_DRAM_DW || DRAM_SUN50I_H6 || DRAM_SUN50I_H616 || DRAM_SUN50I_A133 || DRAM_SUN55I_A523
++if SUNXI_DRAM_DW || DRAM_SUN50I_H6 || DRAM_SUN50I_H616 || DRAM_SUN50I_A133 || DRAM_SUN55I_A523 || DRAM_SUN60I_A733
+ config SUNXI_DRAM_DDR3
+ 	bool
+ 
+ config SUNXI_DRAM_DDR2
+ 	bool
+@@ -603,10 +618,13 @@ config SUNXI_DRAM_LPDDR3
+ config SUNXI_DRAM_LPDDR4
+ 	bool
+ 
+ config SUNXI_DRAM_DDR4
+ 	bool
++	
++config SUNXI_DRAM_LPDDR5
++	bool
+ 
+ choice
+ 	prompt "DRAM Type and Timing"
+ 	default SUNXI_DRAM_A523_LPDDR4 if MACH_SUN55I_A523
+ 	default SUNXI_DRAM_DDR3_1333 if !MACH_SUN8I_V3S
+@@ -705,10 +723,18 @@ config SUNXI_DRAM_A523_LPDDR4
+ 	select SUNXI_DRAM_LPDDR4
+ 	depends on DRAM_SUN55I_A523
+ 	help
+ 	  This option is the LPDDR4 timing used by the stock boot0 by
+ 	  Allwinner.
++	  
++config SUNXI_DRAM_A733_LPDDR5
++	bool "LPDDR5 DRAM chips on the A733 DRAM controller"
++	select SUNXI_DRAM_LPDDR5
++	depends on DRAM_SUN60I_A733
++	help
++	  This option is the LPDDR5 timing used by the stock boot0 by
++	  Allwinner.
+ endchoice
+ endif
+ 
+ config DRAM_TYPE
+ 	int "sunxi dram type"
+@@ -726,10 +752,11 @@ config DRAM_CLK
+ 	default 312 if MACH_SUN6I || MACH_SUN8I
+ 	default 672 if MACH_SUN50I
+ 	default 744 if MACH_SUN50I_H6
+ 	default 720 if MACH_SUN50I_H616 || MACH_SUN50I_A133
+ 	default 1200 if MACH_SUN55I_A523
++	default 2400 if MACH_SUN60I_A733
+ 	---help---
+ 	Set the dram clock speed, valid range 240 - 480 (prior to sun9i),
+ 	must be a multiple of 24. For the sun9i (A80), the tested values
+ 	(for DDR3-1600) are 312 to 792.
+ 
+@@ -745,10 +772,11 @@ endif
+ config DRAM_ZQ
+ 	int "sunxi dram zq value"
+ 	depends on !MACH_SUN50I_H616
+ 	depends on !MACH_SUN50I_A133
+ 	depends on !MACH_SUN55I_A523
++	depends on !MACH_SUN60I_A733
+ 	default 123 if MACH_SUN4I || MACH_SUN5I || MACH_SUN6I || \
+ 		       MACH_SUN8I_A23 || MACH_SUN8I_A33 || MACH_SUN8I_A83T
+ 	default 127 if MACH_SUN7I
+ 	default 14779 if MACH_SUN8I_V3S
+ 	default 3881979 if MACH_SUNXI_H3_H5 || MACH_SUN8I_R40 || MACH_SUN50I_H6
+@@ -759,10 +787,11 @@ config DRAM_ZQ
+ 
+ config DRAM_ODT_EN
+ 	bool "sunxi dram odt enable"
+ 	depends on !MACH_SUN50I_H616
+ 	depends on !MACH_SUN55I_A523
++	depends on !MACH_SUN60I_A733
+ 	default y if MACH_SUN8I_A23
+ 	default y if MACH_SUNXI_H3_H5
+ 	default y if MACH_SUN8I_R40
+ 	default y if MACH_SUN50I
+ 	default y if MACH_SUN50I_H6
+@@ -848,11 +877,11 @@ config DRAM_ODT_CORRECTION
+ 	then the correction is negative. Usually the value for this is 0.
+ endif
+ 
+ config SYS_CLK_FREQ
+ 	default 408000000 if MACH_SUNIV
+-	default 792000000 if MACH_SUN55I_A523
++	default 792000000 if MACH_SUN55I_A523 || MACH_SUN60I_A733
+ 	default 816000000 if MACH_SUN50I || MACH_SUN50I_H5
+ 	default 888000000 if MACH_SUN50I_H6
+ 	default 912000000 if MACH_SUN7I
+ 	default 1008000000
+ 
+@@ -868,10 +897,11 @@ config SYS_CONFIG_NAME
+ 	default "sun50i" if MACH_SUN50I
+ 	default "sun50i" if MACH_SUN50I_H6
+ 	default "sun50i" if MACH_SUN50I_H616
+ 	default "sun50i" if MACH_SUN50I_A133
+ 	default "sun55i" if MACH_SUN55I_A523
++	default "sun60i" if MACH_SUN60I_A733
+ 
+ config SYS_BOARD
+ 	default "sunxi"
+ 
+ config SYS_SOC
+diff --git a/arch/arm/mach-sunxi/board.c b/arch/arm/mach-sunxi/board.c
+index 432b1c10f92..a4f46351831 100644
+--- a/arch/arm/mach-sunxi/board.c
++++ b/arch/arm/mach-sunxi/board.c
+@@ -143,10 +143,14 @@ static int gpio_init(void)
+ 	sunxi_gpio_set_pull(SUNXI_GPB(10), SUNXI_GPIO_PULL_UP);
+ #elif CONFIG_CONS_INDEX == 1 && defined(CONFIG_MACH_SUN55I_A523)
+ 	sunxi_gpio_set_cfgpin(SUNXI_GPB(9), 2);
+ 	sunxi_gpio_set_cfgpin(SUNXI_GPB(10), 2);
+ 	sunxi_gpio_set_pull(SUNXI_GPB(10), SUNXI_GPIO_PULL_UP);
++#elif CONFIG_CONS_INDEX == 1 && defined(CONFIG_MACH_SUN60I_A733)
++	sunxi_gpio_set_cfgpin(SUNXI_GPB(9), 2);
++	sunxi_gpio_set_cfgpin(SUNXI_GPB(10), 2);
++	sunxi_gpio_set_pull(SUNXI_GPB(10), SUNXI_GPIO_PULL_UP);
+ #elif CONFIG_CONS_INDEX == 1 && defined(CONFIG_MACH_SUN8I_A83T)
+ 	sunxi_gpio_set_cfgpin(SUNXI_GPB(9), SUN8I_A83T_GPB_UART0);
+ 	sunxi_gpio_set_cfgpin(SUNXI_GPB(10), SUN8I_A83T_GPB_UART0);
+ 	sunxi_gpio_set_pull(SUNXI_GPB(10), SUNXI_GPIO_PULL_UP);
+ #elif CONFIG_CONS_INDEX == 1 && defined(CONFIG_MACH_SUN8I_V3S)
+-- 
+Created with Armbian build tools https://github.com/armbian/build
+

@@ -1,0 +1,356 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: John Doe <john.doe@somewhere.on.planet>
+Date: Fri, 3 Apr 2026 14:11:59 +0000
+Subject: Patching u-boot sunxi64 files drivers/clk/sunxi/Kconfig
+ drivers/clk/sunxi/Makefile drivers/clk/sunxi/clk_sun60_cpupll.c
+
+Signed-off-by: John Doe <john.doe@somewhere.on.planet>
+---
+ drivers/clk/sunxi/Kconfig               |   7 +
+ drivers/clk/sunxi/Makefile              |   1 +
+ drivers/clk/sunxi/clk_sun60_cpupll.c | 172 ++++++++++
+ drivers/clk/sunxi/clk_sun60_rtc.c | 124 ++++++++++
+ 4 files changed, 304 insertions(+)
+
+diff --git a/drivers/clk/sunxi/Kconfig b/drivers/clk/sunxi/Kconfig
+index 1c1cc82719c..0d9cc43df45 100644
+--- a/drivers/clk/sunxi/Kconfig
++++ b/drivers/clk/sunxi/Kconfig
+@@ -140,7 +140,14 @@ config CLK_SUN55I_A523_R
+ 	bool "Clock driver for Allwinner A523 generation PRCM"
+ 	default MACH_SUN55I_A523
+ 	help
+ 	  This enables common clock driver support for the PRCM
+ 	  in Allwinner A523/T527 SoCs.
++	  
++config CLK_SUN60I_A733
++	bool "Clock driver for Allwinner A733"
++	default MACH_SUN60I_A733
++	help
++	  This enables common clock driver support for platforms based
++	  on Allwinner A733 SoC.
+ 
+ endif # CLK_SUNXI
+diff --git a/drivers/clk/sunxi/Makefile b/drivers/clk/sunxi/Makefile
+index 93b542cebcd..82ae5180f64 100644
+--- a/drivers/clk/sunxi/Makefile
++++ b/drivers/clk/sunxi/Makefile
+@@ -25,5 +25,6 @@ obj-$(CONFIG_CLK_SUN50I_H6_R) += clk_h6_r.o
+ obj-$(CONFIG_CLK_SUN50I_H616) += clk_h616.o
+ obj-$(CONFIG_CLK_SUN50I_A64) += clk_a64.o
+ obj-$(CONFIG_CLK_SUN50I_A100) += clk_a100.o
+ obj-$(CONFIG_CLK_SUN55I_A523) += clk_a523.o
+ obj-$(CONFIG_CLK_SUN55I_A523_R) += clk_a523_r.o
++obj-$(CONFIG_CLK_SUN60I_A733) += clk_sun60_cpupll.o clk_sun60_rtc.o
+\ No newline at end of file
+diff --git a/drivers/clk/sunxi/clk_sun60_cpupll.c b/drivers/clk/sunxi/clk_sun60_cpupll.c
+new file mode 100644
+index 00000000000..2b2ac252024
+--- /dev/null
++++ b/drivers/clk/sunxi/clk_sun60_cpupll.c
+@@ -0,0 +1,171 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Ported from Linux Allwinner sun60iw2 cpupll driver to U-Boot */
++
++#include <clk-uclass.h>
++#include <dm.h>
++#include <asm/io.h>
++#include <linux/iopoll.h>
++#include <linux/bitops.h>
++#include <linux/delay.h>
++
++#define SUN60IW2_PLL_CPU_BACK_REG       0x0000
++#define SUN60IW2_PLL_CPU_L_REG          0x1000
++#define SUN60IW2_PLL_CPU_B_REG          0x2000
++#define SUN60IW2_PLL_CPU_DSU_REG        0x3000
++
++#define SUN60IW2_PLL_CPU_BACK_PAT0_REG  0x0008
++#define SUN60IW2_PLL_CPU_L_PAT0_REG     0x1004
++#define SUN60IW2_PLL_CPU_B_PAT0_REG     0x2004
++#define SUN60IW2_PLL_CPU_DSU_PAT0_REG   0x3004
++
++#define SUN60IW2_PLL_CPU_BACK_PAT1_REG  0x000c
++#define SUN60IW2_PLL_CPU_L_PAT1_REG     0x1008
++#define SUN60IW2_PLL_CPU_B_PAT1_REG     0x2008
++#define SUN60IW2_PLL_CPU_DSU_PAT1_REG   0x3008
++
++#define SUN60IW2_PLL_CPU_L_LFM_REG      0x1018
++#define SUN60IW2_PLL_CPU_B_LFM_REG      0x2018
++#define SUN60IW2_PLL_CPU_DSU_LFM_REG    0x3018
++
++#define SUN60IW2_CPU_L_REG      0x101c
++#define SUN60IW2_CPU_B_REG      0x201c
++#define SUN60IW2_CPU_DSU_REG    0x301c
++
++static const u32 sun60iw2_pll_cpu_regs[] = {
++        SUN60IW2_PLL_CPU_BACK_REG,
++        SUN60IW2_PLL_CPU_L_REG,
++        SUN60IW2_PLL_CPU_B_REG,
++        SUN60IW2_PLL_CPU_DSU_REG,
++};
++
++static const u32 sun60iw2_pll_cpu_pat0_regs[] = {
++        SUN60IW2_PLL_CPU_BACK_PAT0_REG,
++        SUN60IW2_PLL_CPU_L_PAT0_REG,
++        SUN60IW2_PLL_CPU_B_PAT0_REG,
++        SUN60IW2_PLL_CPU_DSU_PAT0_REG,
++};
++
++static const u32 sun60iw2_pll_cpu_pat1_regs[] = {
++        SUN60IW2_PLL_CPU_BACK_PAT1_REG,
++        SUN60IW2_PLL_CPU_L_PAT1_REG,
++        SUN60IW2_PLL_CPU_B_PAT1_REG,
++        SUN60IW2_PLL_CPU_DSU_PAT1_REG,
++};
++
++static const u32 sun60iw2_pll_lfm_regs[] = {
++        SUN60IW2_PLL_CPU_L_LFM_REG,
++        SUN60IW2_PLL_CPU_B_LFM_REG,
++        SUN60IW2_PLL_CPU_DSU_LFM_REG,
++};
++
++struct sun60iw2_cpupll_priv {
++        void __iomem *reg;
++};
++
++static void ccupll_helper_wait_for_lock(void __iomem *addr, u32 lock)
++{
++        u32 reg;
++        /* U-Boot readl_poll_timeout returns 0 on success, -ETIMEDOUT on failure */
++        if (readl_poll_timeout(addr, reg, reg & lock, 70000))
++                pr_err("CPU PLL lock timeout at %p\n", addr);
++}
++
++static void cpupll_helper_wait_for_clear(void __iomem *addr, u32 clear)
++{
++        u32 reg;
++
++        reg = readl(addr);
++        writel(reg | clear, addr);
++
++        if (readl_poll_timeout(addr, reg, !(reg & clear), 10000))
++                pr_err("CPU PLL clear timeout at %p\n", addr);
++}
++
++static int sun60iw2_cpupll_probe(struct udevice *dev)
++{
++        struct sun60iw2_cpupll_priv *priv = dev_get_priv(dev);
++        struct clk dcxo;
++        u32 val;
++        int i, ret;
++
++        /* 1. Map the register address from the Device Tree */
++        priv->reg = dev_read_addr_ptr(dev);
++        if (!priv->reg)
++                return -EINVAL;
++
++        /* 2. Get and verify the DCXO parent clock (usually 24 MHz) */
++        ret = clk_get_by_name(dev, "dcxo", &dcxo);
++        if (ret) {
++                pr_err("fail to get dcxo clk!\n");
++                return ret;
++        }
++
++        /* Note: The vco_range_self_adaption from Linux
++         * was omitted because U-Boot usually keeps the frequencies
++         * static and does not scale them dynamically.
++         */
++
++        /* 3. Hardware initialization */
++        for (i = 0; i < ARRAY_SIZE(sun60iw2_pll_cpu_regs); i++) {
++                /* Set pat0_ctrl_reg */
++                val = readl(priv->reg + sun60iw2_pll_cpu_pat0_regs[i]);
++                val |= BIT(29) | BIT(30);  /* Use triangular (3-bit) */
++                writel(val, priv->reg + sun60iw2_pll_cpu_pat0_regs[i]);
++
++                /* Set pat1_ctrl_reg */
++                val = readl(priv->reg + sun60iw2_pll_cpu_pat1_regs[i]);
++                val |= BIT(31);  /* Enable lfm_en */
++                writel(val, priv->reg + sun60iw2_pll_cpu_pat1_regs[i]);
++
++                /* Set pll_lfm_reg */
++                if (i) {  /* pll_cpu_back has no lfm register */
++                        val = readl(priv->reg + sun60iw2_pll_lfm_regs[i - 1]);
++                        val &= ~BIT(0);
++                        val |= BIT(31) | BIT(8);  /* 1.125 MHz/us */
++                        writel(val, priv->reg + sun60iw2_pll_lfm_regs[i - 1]);
++                }
++
++                cpupll_helper_wait_for_clear(priv->reg + sun60iw2_pll_cpu_regs[i], BIT(26));
++
++                /* Enable pll_en, pll_ldo_en, lock_en, pll_output */
++                val = readl(priv->reg + sun60iw2_pll_cpu_regs[i]);
++                val |= BIT(27) | BIT(29) | BIT(30) | BIT(31);
++                writel(val, priv->reg + sun60iw2_pll_cpu_regs[i]);
++
++                cpupll_helper_wait_for_clear(priv->reg + sun60iw2_pll_cpu_regs[i], BIT(26));
++                ccupll_helper_wait_for_lock(priv->reg + sun60iw2_pll_cpu_regs[i], BIT(28));
++        }
++
++        /* 4. Set the default PLL mux for the CPU */
++        /* In the Linux driver: set_reg(reg + SUN60IW2_CPU_L_REG, 0x3, 3, 24); */
++        /* U-Boot typically uses clrsetbits_le32(addr, mask, set) for this */
++
++        /* Switch the mux to source 3 (pll-cpu-l/b/dsu) (mask: 3 bits (0x7) at position 24) */
++        clrsetbits_le32(priv->reg + SUN60IW2_CPU_L_REG,   0x7 << 24, 0x3 << 24);
++        clrsetbits_le32(priv->reg + SUN60IW2_CPU_B_REG,   0x7 << 24, 0x3 << 24);
++        clrsetbits_le32(priv->reg + SUN60IW2_CPU_DSU_REG, 0x7 << 24, 0x3 << 24);
++
++        printf("sun60iw2 cpupll initialized\n");
++
++        return 0;
++}
++
++static const struct clk_ops sun60iw2_cpupll_ops = {
++        /* .get_rate or .set_rate could be added later.
++         * For U-Boot, it is usually enough if probe() succeeds.
++         */
++};
++
++static const struct udevice_id sun60iw2_cpupll_ids[] = {
++        { .compatible = "allwinner,sun60iw2-cpupll" },
++        { }
++};
++
++U_BOOT_DRIVER(sun60iw2_cpupll) = {
++        .name           = "sun60iw2-cpupll",
++        .id             = UCLASS_CLK,
++        .of_match       = sun60iw2_cpupll_ids,
++        .priv_auto      = sizeof(struct sun60iw2_cpupll_priv),
++        .ops            = &sun60iw2_cpupll_ops,
++        .probe          = sun60iw2_cpupll_probe,
++};
+diff --git a/drivers/clk/sunxi/clk_sun60_rtc.c b/drivers/clk/sunxi/clk_sun60_rtc.c
+new file mode 100644
+index 00000000000..fba6ae516e3
+--- /dev/null
++++ b/drivers/clk/sunxi/clk_sun60_rtc.c
+@@ -0,0 +1,124 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Ported from Linux Allwinner sun60iw2 rtc-ccu driver to U-Boot
++ * Initializes the DCXO (24MHz) and external 32kHz oscillators.
++ */
++
++#include <clk-uclass.h>
++#include <dm.h>
++#include <asm/io.h>
++#include <linux/delay.h>
++#include <linux/bitops.h>
++#include <linux/types.h>
++#include <stdio.h>
++
++#define LOSC_CTRL_REG           0x00
++#define LOSC_AUTO_SWT_STA_REG   0x04
++#define LOSC_OUT_GATING_REG     0x60
++#define XO_CTRL_REG             0x160
++
++#define KEY_FIELD_MAGIC_NUM_RTC 0x16AA0000
++
++struct sun60iw2_rtc_ccu_priv {
++        void __iomem *reg;
++};
++
++/* * Liefert dem System (z. B. dem CPU-PLL) den Basis-Takt zurück 
++ */
++static ulong sun60iw2_rtc_ccu_get_rate(struct clk *clk)
++{
++        /* Der DCXO läuft standardmäßig auf 24 MHz */
++        return 24000000;
++}
++
++static const struct clk_ops sun60iw2_rtc_ccu_ops = {
++        .get_rate = sun60iw2_rtc_ccu_get_rate,
++};
++
++static void rtc_clock_source_init(void __iomem *base)
++{
++        u32 val;
++        int read_times = 0;
++        int normal_times = 0;
++
++        /* (1) enable DCXO 
++         * Linux: set_reg(base + XO_CTRL_REG, 0x1, 1, 1);
++         */
++        setbits_le32(base + XO_CTRL_REG, BIT(1));
++
++        /* (2) enable auto switch function 
++         * Linux: set_reg_key(base + LOSC_CTRL_REG, KEY, 16, 16, 0x1, 2, 14);
++         */
++        val = readl(base + LOSC_CTRL_REG);
++        val &= ~((0xffff << 16) | (0x3 << 14)); /* Maskiere Key und Bits 14-15 */
++        val |= KEY_FIELD_MAGIC_NUM_RTC | (0x1 << 14);
++        writel(val, base + LOSC_CTRL_REG);
++
++        /* (3) Wait for Losc to stabilize */
++        val = readl(base + LOSC_CTRL_REG);
++        if (!(val & BIT(4))) { /* Wenn externer 32k nicht aktiviert ist */
++                /* enable external 32K crystal */
++                val = readl(base + LOSC_CTRL_REG);
++                val &= ~((0xffff << 16) | BIT(4));
++                val |= KEY_FIELD_MAGIC_NUM_RTC | BIT(4);
++                writel(val, base + LOSC_CTRL_REG);
++
++                /* Warte, bis der Takt stabil ist */
++                while (read_times != 100 && normal_times != 4) {
++                        if ((readl(base + LOSC_AUTO_SWT_STA_REG) & BIT(4)) == 0)
++                                normal_times++;
++                        else
++                                normal_times = 0;
++
++                        udelay(3);
++                        read_times++;
++                }
++
++                if (normal_times < 4)
++                        printf("RTC CCU: losc not stable, 32K clk will use 16M as parent!\n");
++        }
++
++        /* (4) set the parent of osc32k-sys to ext-osc32k 
++         * Linux: set_reg_key(base + LOSC_CTRL_REG, KEY, 16, 16, 0x1, 1, 0);
++         */
++        val = readl(base + LOSC_CTRL_REG);
++        val &= ~((0xffff << 16) | BIT(0));
++        val |= KEY_FIELD_MAGIC_NUM_RTC | BIT(0);
++        writel(val, base + LOSC_CTRL_REG);
++
++        /* (5) set the parent of osc32k-out to osc32k-sys 
++         * Linux: set_reg(base + LOSC_OUT_GATING_REG, 0x0, 2, 1);
++         */
++        clrbits_le32(base + LOSC_OUT_GATING_REG, 0x3 << 1);
++}
++
++static int sun60iw2_rtc_ccu_probe(struct udevice *dev)
++{
++        struct sun60iw2_rtc_ccu_priv *priv = dev_get_priv(dev);
++
++        /* Register-Adressen aus dem Device Tree mappen */
++        priv->reg = dev_read_addr_ptr(dev);
++        if (!priv->reg)
++                return -EINVAL;
++
++        /* Hardware initialisieren */
++        rtc_clock_source_init(priv->reg);
++
++        printf("sun60iw2 rtc-ccu initialized\n");
++        
++        return 0;
++}
++
++static const struct udevice_id sun60iw2_rtc_ccu_ids[] = {
++        { .compatible = "allwinner,sun60iw2-rtc-ccu" },
++        { }
++};
++
++U_BOOT_DRIVER(clk_sun60_rtc) = {
++        .name           = "clk_sun60_rtc",
++        .id             = UCLASS_CLK,
++        .of_match       = sun60iw2_rtc_ccu_ids,
++        .priv_auto      = sizeof(struct sun60iw2_rtc_ccu_priv),
++        .ops            = &sun60iw2_rtc_ccu_ops,
++        .probe          = sun60iw2_rtc_ccu_probe,
++};
+\ No newline at end of file
+-- 
+Created with Armbian build tools https://github.com/armbian/build
+

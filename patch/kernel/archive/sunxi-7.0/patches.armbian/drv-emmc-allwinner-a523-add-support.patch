@@ -1,0 +1,231 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Marvin Wewer <mwewer37@proton.me>
+Date: Wed, 1 Apr 2026 15:35:40 +0200
+Subject: Adding support for Allwinner A523 eMMC controller with CQE
+
+Signed-off-by: Marvin Wewer <mwewer37@proton.me>
+---
+ drivers/mmc/host/sunxi-mmc.c | 124 ++++++++++
+ 1 file changed, 124 insertions(+)
+
+diff --git a/drivers/mmc/host/sunxi-mmc.c b/drivers/mmc/host/sunxi-mmc.c
+index 111111111111..222222222222 100644
+--- a/drivers/mmc/host/sunxi-mmc.c
++++ b/drivers/mmc/host/sunxi-mmc.c
+@@ -23,10 +23,11 @@
+ #include <linux/mmc/host.h>
+ #include <linux/mmc/mmc.h>
+ #include <linux/mmc/sd.h>
+ #include <linux/mmc/sdio.h>
+ #include <linux/mmc/slot-gpio.h>
++#include <linux/mmc/cqhci.h>
+ #include <linux/module.h>
+ #include <linux/mod_devicetable.h>
+ #include <linux/of_address.h>
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
+@@ -229,10 +230,12 @@
+ #define SDXC_CAL_DL_SW_SHIFT	0
+ #define SDXC_CAL_DL_MASK	0x3f
+ 
+ #define SDXC_CAL_TIMEOUT	3	/* in seconds, 3s is enough*/
+ 
++#define SDXC_CQHCI_BASE 0x800 /* Typical Allwinner CQE Offset */
++
+ struct sunxi_mmc_clk_delay {
+ 	u32 output;
+ 	u32 sample;
+ };
+ 
+@@ -262,10 +265,13 @@ struct sunxi_mmc_cfg {
+ 	 */
+ 	bool needs_new_timings;
+ 
+ 	/* clock hardware can switch between old and new timing modes */
+ 	bool ccu_has_timings_switch;
++
++	/* command queuing engine support */
++	bool supports_cqhci;
+ };
+ 
+ struct sunxi_mmc_host {
+ 	struct device *dev;
+ 	struct mmc_host	*mmc;
+@@ -1113,19 +1119,87 @@ static int sunxi_mmc_card_busy(struct mmc_host *mmc)
+ 	struct sunxi_mmc_host *host = mmc_priv(mmc);
+ 
+ 	return !!(mmc_readl(host, REG_STAS) & SDXC_CARD_DATA_BUSY);
+ }
+ 
++static int sunxi_mmc_execute_tuning(struct mmc_host *mmc, u32 opcode)
++{
++	struct sunxi_mmc_host *host = mmc_priv(mmc);
++	int i, best_delay = -1;
++	int max_len = 0, current_len = 0;
++	int best_start = 0, current_start = 0;
++	u8 good_delays[64] = {0};
++	u32 val;
++
++	if (!host->cfg->can_calibrate)
++		return 0;
++
++	dev_info(mmc_dev(mmc), "Start eMMC Tuning...\n");
++
++	/* Try 64 delay stages */
++	for (i = 0; i < 64; i++) {
++		/* Set delay value and enable software calibration */
++		val = mmc_readl(host, REG_SAMP_DL_REG);
++		val &= ~SDXC_CAL_DL_MASK;
++		val |= (i << SDXC_CAL_DL_SW_SHIFT) | SDXC_CAL_DL_SW_EN;
++		mmc_writel(host, REG_SAMP_DL_REG, val);
++
++		/* Kernel standard function sends test pattern and checks CRC */
++		if (!mmc_send_tuning(mmc, opcode, NULL)) {
++			good_delays[i] = 1;
++		}
++	}
++
++	/* Find the largest error-free window */
++	for (i = 0; i < 64; i++) {
++		if (good_delays[i]) {
++			if (current_len == 0)
++				current_start = i;
++			current_len++;
++		} else {
++			if (current_len > max_len) {
++				max_len = current_len;
++				best_start = current_start;
++			}
++			current_len = 0;
++		}
++	}
++
++	if (current_len > max_len) {
++		max_len = current_len;
++		best_start = current_start;
++	}
++
++	if (max_len == 0) {
++		dev_err(mmc_dev(mmc), "Tuning fehlgeschlagen: Kein Fenster gefunden\n");
++		return -EIO;
++	}
++
++	/* Besten Wert berechnen (Mitte des Fensters) */
++	best_delay = best_start + (max_len / 2);
++	dev_info(mmc_dev(mmc), "Tuning erfolgreich: Fenster [%d-%d], Bester Delay: %d\n",
++		 best_start, best_start + max_len - 1, best_delay);
++
++	/* Besten Delay final in das Register schreiben */
++	val = mmc_readl(host, REG_SAMP_DL_REG);
++	val &= ~SDXC_CAL_DL_MASK;
++	val |= (best_delay << SDXC_CAL_DL_SW_SHIFT) | SDXC_CAL_DL_SW_EN;
++	mmc_writel(host, REG_SAMP_DL_REG, val);
++
++	return 0;
++}
++
+ static const struct mmc_host_ops sunxi_mmc_ops = {
+ 	.request	 = sunxi_mmc_request,
+ 	.set_ios	 = sunxi_mmc_set_ios,
+ 	.get_ro		 = mmc_gpio_get_ro,
+ 	.get_cd		 = mmc_gpio_get_cd,
+ 	.enable_sdio_irq = sunxi_mmc_enable_sdio_irq,
+ 	.start_signal_voltage_switch = sunxi_mmc_volt_switch,
+ 	.card_hw_reset	 = sunxi_mmc_hw_reset,
+ 	.card_busy	 = sunxi_mmc_card_busy,
++	.execute_tuning  = sunxi_mmc_execute_tuning,
+ };
+ 
+ static const struct sunxi_mmc_clk_delay sunxi_mmc_clk_delays[] = {
+ 	[SDXC_CLK_400K]		= { .output = 180, .sample = 180 },
+ 	[SDXC_CLK_25M]		= { .output = 180, .sample =  75 },
+@@ -1218,10 +1292,18 @@ static const struct sunxi_mmc_cfg sun50i_a100_emmc_cfg = {
+ 	.clk_delays = NULL,
+ 	.can_calibrate = true,
+ 	.needs_new_timings = true,
+ };
+ 
++static const struct sunxi_mmc_cfg sun55i_a523_emmc_cfg = {
++	.idma_des_size_bits = 13,
++	.idma_des_shift = 2,
++	.clk_delays = NULL,
++	.can_calibrate = true,
++	.needs_new_timings = true,
++};
++
+ static const struct of_device_id sunxi_mmc_of_match[] = {
+ 	{ .compatible = "allwinner,sun4i-a10-mmc", .data = &sun4i_a10_cfg },
+ 	{ .compatible = "allwinner,sun5i-a13-mmc", .data = &sun5i_a13_cfg },
+ 	{ .compatible = "allwinner,sun7i-a20-mmc", .data = &sun7i_a20_cfg },
+ 	{ .compatible = "allwinner,sun8i-a83t-emmc", .data = &sun8i_a83t_emmc_cfg },
+@@ -1232,14 +1314,32 @@ static const struct of_device_id sunxi_mmc_of_match[] = {
+ 	{ .compatible = "allwinner,sun50i-a100-mmc", .data = &sun20i_d1_cfg },
+ 	{ .compatible = "allwinner,sun50i-a100-emmc", .data = &sun50i_a100_emmc_cfg },
+ 	{ .compatible = "allwinner,sun50i-h5-emmc", .data = &sun50i_h5_emmc_cfg },
+ 	{ .compatible = "allwinner,sun50i-h6-emmc", .data = &sun50i_a64_emmc_cfg },
+ 	{ .compatible = "allwinner,sun50i-h616-mmc", .data = &sun50i_h616_cfg },
++	{ .compatible = "allwinner,sun55i-a523-mmc", .data = &sun55i_a523_emmc_cfg },
+ 	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, sunxi_mmc_of_match);
+ 
++static u32 sunxi_mmc_cqhci_read_l(struct cqhci_host *cq_host, int reg)
++{
++	return readl(cq_host->mmio + reg);
++}
++
++static void sunxi_mmc_cqhci_write_l(struct cqhci_host *cq_host, u32 val, int reg)
++{
++	writel(val, cq_host->mmio + reg);
++}
++
++static const struct cqhci_host_ops sunxi_mmc_cqhci_ops = {
++	.read_l     = sunxi_mmc_cqhci_read_l,
++	.write_l    = sunxi_mmc_cqhci_write_l,
++	/* optional: .enable and .disable, if Allwinner-specific registers
++	   (like REG_CQE_CTRL) need to be set before startup */
++};
++
+ static int sunxi_mmc_enable(struct sunxi_mmc_host *host)
+ {
+ 	int ret;
+ 
+ 	if (!IS_ERR(host->reset)) {
+@@ -1483,10 +1583,34 @@ static int sunxi_mmc_probe(struct platform_device *pdev)
+ 	//pm_runtime_set_active(&pdev->dev);
+ 	//pm_runtime_set_autosuspend_delay(&pdev->dev, 50);
+ 	//pm_runtime_use_autosuspend(&pdev->dev);
+ 	//pm_runtime_enable(&pdev->dev);
+ 
++	if (of_device_is_compatible(pdev->dev.of_node, "allwinner,sun55i-a523-emmc")) {
++		struct cqhci_host *cq_host;
++
++		cq_host = devm_kzalloc(&pdev->dev, sizeof(*cq_host), GFP_KERNEL);
++		if (!cq_host) {
++			ret = -ENOMEM;
++			goto error_free_dma;
++		}
++
++		/* Das CQE-Registerfenster mappen */
++		cq_host->mmio = host->reg_base + SDXC_CQHCI_BASE;
++		cq_host->ops = &sunxi_mmc_cqhci_ops;
++
++		/* Dem MMC-Kern sagen, dass CQE unterstützt wird */
++		mmc->caps2 |= MMC_CAP2_CQE | MMC_CAP2_CQE_DCMD;
++
++		ret = cqhci_init(cq_host, mmc, 0);
++		if (ret) {
++			dev_err(&pdev->dev, "CQHCI Init fehlgeschlagen\n");
++			goto error_free_dma;
++		}
++		dev_info(&pdev->dev, "Command Queuing (CQE) aktiviert\n");
++	}
++
+ 	ret = mmc_add_host(mmc);
+ 	if (ret)
+ 		goto error_free_dma;
+ 
+ 	dev_info(&pdev->dev, "initialized, max. request size: %u KB%s\n",
+-- 
+Created with Armbian build tools https://github.com/armbian/build
+

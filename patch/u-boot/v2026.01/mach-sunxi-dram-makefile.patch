@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: John Doe <john.doe@somewhere.on.planet>
+Date: Sun, 29 Mar 2026 18:37:39 +0200
+Subject: Patching u-boot sunxi64 files
+ arch/arm/mach-sunxi/dram_timings/Makefile
+
+Signed-off-by: John Doe <john.doe@somewhere.on.planet>
+---
+ arch/arm/mach-sunxi/dram_timings/Makefile | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/mach-sunxi/dram_timings/Makefile b/arch/arm/mach-sunxi/dram_timings/Makefile
+index 5de9fd5aab4..830a23a3c63 100644
+--- a/arch/arm/mach-sunxi/dram_timings/Makefile
++++ b/arch/arm/mach-sunxi/dram_timings/Makefile
+@@ -8,5 +8,6 @@ obj-$(CONFIG_SUNXI_DRAM_H616_LPDDR3)	+= h616_lpddr3.o
+ obj-$(CONFIG_SUNXI_DRAM_H616_LPDDR4)	+= h616_lpddr4_2133.o
+ obj-$(CONFIG_SUNXI_DRAM_A133_DDR4)	+= a133_ddr4.o
+ obj-$(CONFIG_SUNXI_DRAM_A133_LPDDR4)	+= a133_lpddr4.o
+ obj-$(CONFIG_SUNXI_DRAM_A523_DDR3)	+= a523_ddr3.o
+ obj-$(CONFIG_SUNXI_DRAM_A523_LPDDR4)	+= a523_lpddr4.o
++obj-$(CONFIG_SUNXI_DRAM_A733_LPDDR5)	+= a733_lpddr5.o
+-- 
+Created with Armbian build tools https://github.com/armbian/build
+
