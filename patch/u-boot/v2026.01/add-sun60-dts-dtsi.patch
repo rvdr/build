@@ -15,9 +15,9 @@ Signed-off-by: John Doe <john.doe@somewhere.on.planet>
  dts/upstream/src/arm64/allwinner/sun60i-a733-orangepi-4-pro.dts | 1333 ++++++++++
  dts/upstream/src/arm64/allwinner/sun60i-a733.dtsi               |  508 ++++
  include/configs/sun60i.h 		     			 | 11 ++++++++++
- arch/arm/mach-sunxi/Kconfig                 			 |   38 +
+ arch/arm/mach-sunxi/Kconfig                 			 |   39 +
  arch/arm/mach-sunxi/board.c 		     			 | 4 ++++
- 6 files changed, 4535 insertions(+), 4 deletions(-)
+ 6 files changed, 4535 insertions(+), 3 deletions(-)
 
 diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
 index fcad6fb2fc7..7610f9a305e 100644
@@ -43,7 +43,7 @@ new file mode 100644
 index 00000000000..eec2361a694
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7a.dts
-@@ -0,0 +1,471 @@
+@@ -0,0 +1,475 @@
 +/*
 + * Allwinner Technology CO., Ltd. sun60iw2p1 soc board.
 + *
@@ -73,6 +73,10 @@ index 00000000000..eec2361a694
 +		spi0 = &spi0;
 +		ethernet0 = &gmac0;
 +		ethernet1 = &gmac1;
++	};
++
++	chosen {
++		stdout-path = "serial0:115200n8";  /* <--- HIER sind die 115200 Baud! */
 +	};
 +};
 +
@@ -520,7 +524,7 @@ new file mode 100644
 index 00000000000..50e1cc380e9
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7z.dts
-@@ -0,0 +1,472 @@
+@@ -0,0 +1,476 @@
 +/*
 + * Allwinner Technology CO., Ltd. sun60iw2p1 soc board.
 + *
@@ -550,6 +554,10 @@ index 00000000000..50e1cc380e9
 +		spi0 = &spi0;
 +		ethernet0 = &gmac0;
 +		ethernet1 = &gmac1;
++	};
++
++	chosen {
++		stdout-path = "serial0:115200n8";  /* <--- HIER sind die 115200 Baud! */
 +	};
 +};
 +
@@ -998,7 +1006,7 @@ new file mode 100644
 index 00000000000..429fe10ac64
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun60i-a733-orangepi-4-pro.dts
-@@ -0,0 +1,373 @@
+@@ -0,0 +1,377 @@
 +/*
 + * Allwinner Technology CO., Ltd. sun60iw2p1 soc board.
 + *
@@ -1028,6 +1036,10 @@ index 00000000000..429fe10ac64
 +		spi0 = &spi0;
 +		ethernet0 = &gmac0;
 +		ethernet1 = &gmac1;
++	};
++
++	chosen {
++		stdout-path = "serial0:115200n8";  /* <--- HIER sind die 115200 Baud! */
 +	};
 +};
 +
@@ -1922,14 +1934,14 @@ index 00000000000..722fecfc240
 +		};
 +
 +               rtc_ccu: rtc_ccu@7090000 {
-+                       compatible = "allwinner,sun60iw2-rtc-ccu";
++                       compatible = "allwinner,sun60i-a733-rtc-ccu";
 +                       reg = <0x0 0x7090000 0x0 0x400>;
 +                       #clock-cells = <1>;
 +                       #reset-cells = <1>;
 +               };
 +
 +		cpupll_ccu: clock-controller@8870000 {
-+		        compatible = "allwinner,sun60iw2-cpupll";
++		        compatible = "allwinner,sun60i-a733-cpull-ccu";
 +		        reg = <0x0 0x08870000 0x0 0x3034>;
 +		        clocks = <&rtc_ccu 0>; //originally CLK_DCXO
 +		        clock-names = "dcxo";
@@ -1937,8 +1949,8 @@ index 00000000000..722fecfc240
 +		        #reset-cells = <1>;
 +		};
 +
-+		pio: pinctrl@0300b000 {
-+			compatible = "allwinner,sun60iw2p1-pinctrl";
++		pio: pinctrl@2000000 {
++			compatible = "allwinner,sun60i-a733-pinctrl";
 +			device_type = "pio";
 +			gpio-controller;
 +			#size-cells = <0>;
@@ -2048,7 +2060,7 @@ index 00000000000..722fecfc240
 +		};
 +
 +		r_pio: pinctrl@7025000 {
-+			compatible = "allwinner,sun60iw2-r-pinctrl"; /* <-- Das verknüpft den C-Treiber! */
++			compatible = "allwinner,sun60i-a733-r-pinctrl"; 
 +				device_type = "r_pio";
 +				gpio-controller;
 +				#size-cells = <0>;
@@ -2546,10 +2558,10 @@ index 00000000000..70649366c1c
 +
 +#endif /* __CONFIG_H */
 diff --git a/arch/arm/mach-sunxi/Kconfig b/arch/arm/mach-sunxi/Kconfig
-index e979ee4a2cc..249b46623cb 100644
+index e979ee4a2cc..26732300509 100644
 --- a/arch/arm/mach-sunxi/Kconfig
 +++ b/arch/arm/mach-sunxi/Kconfig
-@@ -59,10 +59,15 @@ config DRAM_SUN50I_A133
+@@ -59,12 +59,17 @@ config DRAM_SUN50I_A133
  
  config DRAM_SUN55I_A523
  	bool
@@ -2561,24 +2573,51 @@ index e979ee4a2cc..249b46623cb 100644
 +	help
 +	  Select this DRAM controller driver for A733 SoCs.
  
- if DRAM_SUN50I_H616 || DRAM_SUN50I_A133 || DRAM_SUN55I_A523
+-if DRAM_SUN50I_H616 || DRAM_SUN50I_A133 || DRAM_SUN55I_A523
++if DRAM_SUN50I_H616 || DRAM_SUN50I_A133 || DRAM_SUN55I_A523 || DRAM_SUN60I_A733
  config DRAM_SUNXI_DX_ODT
  	hex "DRAM DX ODT parameter"
  	help
-@@ -225,11 +230,11 @@ config SUNXI_SRAM_ADDRESS
+ 	  DX ODT value from vendor DRAM settings.
  
+@@ -212,11 +217,11 @@ config AXP_PMIC_BUS
+ 	  AXP family PMIC devices.
+ 
+ config SUNXI_SRAM_ADDRESS
+ 	hex
+ 	default 0x10000 if MACH_SUN9I || MACH_SUN50I || MACH_SUN50I_H5
+-	default 0x44000 if MACH_SUN55I_A523
++	default 0x44000 if MACH_SUN55I_A523 || MACH_SUN60I_A733
+ 	default 0x20000 if SUN50I_GEN_H6 || SUNXI_GEN_NCAT2
+ 	default 0x0
+ 	---help---
+ 	Older Allwinner SoCs have their mask boot ROM mapped just below 4GB,
+ 	with the first SRAM region being located at address 0.
+@@ -226,10 +231,11 @@ config SUNXI_SRAM_ADDRESS
  config SUNXI_RVBAR_ADDRESS
  	hex
  	depends on ARM64
  	default 0x08100040 if MACH_SUN50I_A133
--	default 0x08000040 if MACH_SUN55I_A523
-+	default 0x08000040 if MACH_SUN55I_A523 || MACH_SUN60I_A733
+ 	default 0x08000040 if MACH_SUN55I_A523
++	default 0x07000040 if MACH_SUN60I_A733
  	default 0x09010040 if SUN50I_GEN_H6
  	default 0x017000a0
  	---help---
  	The read-only RVBAR system register holds the address of the first
  	instruction to execute after a reset. Allwinner cores provide a
-@@ -336,11 +341,11 @@ config MACH_SUNXI_H3_H5
+@@ -255,10 +261,11 @@ config SUNXI_BL31_BASE
+ 	hex
+ 	default 0x00044000 if MACH_SUN50I || MACH_SUN50I_H5
+ 	default 0x40000000 if MACH_SUN50I_H616
+ 	default 0x00104000 if SUN50I_GEN_H6
+ 	default 0x00054000 if MACH_SUN55I_A523
++	default 0x48000000 if MACH_SUN60I_A733
+ 	default 0x0
+ 	help
+ 	  Address where BL31 (TF-A) is loaded, or zero if BL31 is not used.
+ 
+ config SUNXI_SCP_BASE
+@@ -336,11 +343,11 @@ config MACH_SUNXI_H3_H5
  	select SUPPORT_SPL
  
  # TODO: try out A80's 8GiB DRAM space
@@ -2591,7 +2630,7 @@ index e979ee4a2cc..249b46623cb 100644
  
  choice
  	prompt "Sunxi SoC Variant"
-@@ -550,10 +555,20 @@ config MACH_SUN55I_A523
+@@ -550,10 +557,20 @@ config MACH_SUN55I_A523
  	select SUNXI_NEW_PINCTRL
  	select DRAM_SUN55I_A523
  	select FIT
@@ -2612,7 +2651,7 @@ index e979ee4a2cc..249b46623cb 100644
  
  # The sun8i SoCs share a lot, this helps to avoid a lot of "if A23 || A33"
  config MACH_SUN8I
-@@ -588,11 +603,11 @@ config ARM_BOOT_HOOK_RMR
+@@ -588,11 +605,11 @@ config ARM_BOOT_HOOK_RMR
  	chosen to be a NOP in one mode and a branch in the other, so the
  	code would only be executed if not already in AArch64.
  	This allows both the SPL and the U-Boot proper to be entered in
@@ -2625,7 +2664,7 @@ index e979ee4a2cc..249b46623cb 100644
  
  config SUNXI_DRAM_DDR2
  	bool
-@@ -603,10 +618,13 @@ config SUNXI_DRAM_LPDDR3
+@@ -603,10 +620,13 @@ config SUNXI_DRAM_LPDDR3
  config SUNXI_DRAM_LPDDR4
  	bool
  
@@ -2639,7 +2678,7 @@ index e979ee4a2cc..249b46623cb 100644
  	prompt "DRAM Type and Timing"
  	default SUNXI_DRAM_A523_LPDDR4 if MACH_SUN55I_A523
  	default SUNXI_DRAM_DDR3_1333 if !MACH_SUN8I_V3S
-@@ -705,10 +723,18 @@ config SUNXI_DRAM_A523_LPDDR4
+@@ -705,10 +725,18 @@ config SUNXI_DRAM_A523_LPDDR4
  	select SUNXI_DRAM_LPDDR4
  	depends on DRAM_SUN55I_A523
  	help
@@ -2658,7 +2697,7 @@ index e979ee4a2cc..249b46623cb 100644
  
  config DRAM_TYPE
  	int "sunxi dram type"
-@@ -726,10 +752,11 @@ config DRAM_CLK
+@@ -726,10 +754,11 @@ config DRAM_CLK
  	default 312 if MACH_SUN6I || MACH_SUN8I
  	default 672 if MACH_SUN50I
  	default 744 if MACH_SUN50I_H6
@@ -2670,7 +2709,7 @@ index e979ee4a2cc..249b46623cb 100644
  	must be a multiple of 24. For the sun9i (A80), the tested values
  	(for DDR3-1600) are 312 to 792.
  
-@@ -745,10 +772,11 @@ endif
+@@ -745,10 +774,11 @@ endif
  config DRAM_ZQ
  	int "sunxi dram zq value"
  	depends on !MACH_SUN50I_H616
@@ -2682,7 +2721,7 @@ index e979ee4a2cc..249b46623cb 100644
  	default 127 if MACH_SUN7I
  	default 14779 if MACH_SUN8I_V3S
  	default 3881979 if MACH_SUNXI_H3_H5 || MACH_SUN8I_R40 || MACH_SUN50I_H6
-@@ -759,10 +787,11 @@ config DRAM_ZQ
+@@ -759,10 +789,11 @@ config DRAM_ZQ
  
  config DRAM_ODT_EN
  	bool "sunxi dram odt enable"
@@ -2694,7 +2733,7 @@ index e979ee4a2cc..249b46623cb 100644
  	default y if MACH_SUN8I_R40
  	default y if MACH_SUN50I
  	default y if MACH_SUN50I_H6
-@@ -848,11 +877,11 @@ config DRAM_ODT_CORRECTION
+@@ -848,11 +879,11 @@ config DRAM_ODT_CORRECTION
  	then the correction is negative. Usually the value for this is 0.
  endif
  
@@ -2707,7 +2746,7 @@ index e979ee4a2cc..249b46623cb 100644
  	default 912000000 if MACH_SUN7I
  	default 1008000000
  
-@@ -868,10 +897,11 @@ config SYS_CONFIG_NAME
+@@ -868,10 +899,11 @@ config SYS_CONFIG_NAME
  	default "sun50i" if MACH_SUN50I
  	default "sun50i" if MACH_SUN50I_H6
  	default "sun50i" if MACH_SUN50I_H616
@@ -2720,7 +2759,7 @@ index e979ee4a2cc..249b46623cb 100644
  
  config SYS_SOC
 diff --git a/arch/arm/mach-sunxi/board.c b/arch/arm/mach-sunxi/board.c
-index 432b1c10f92..a4f46351831 100644
+index 432b1c10f92..e21fd5c4413 100644
 --- a/arch/arm/mach-sunxi/board.c
 +++ b/arch/arm/mach-sunxi/board.c
 @@ -143,10 +143,14 @@ static int gpio_init(void)
@@ -2738,6 +2777,19 @@ index 432b1c10f92..a4f46351831 100644
  	sunxi_gpio_set_cfgpin(SUNXI_GPB(10), SUN8I_A83T_GPB_UART0);
  	sunxi_gpio_set_pull(SUNXI_GPB(10), SUNXI_GPIO_PULL_UP);
  #elif CONFIG_CONS_INDEX == 1 && defined(CONFIG_MACH_SUN8I_V3S)
+@@ -505,11 +509,11 @@ void reset_cpu(void)
+ 
+ 	while (1) {
+ 		/* sun5i sometimes gets stuck without this */
+ 		writel(WDT_MODE_RESET_EN | WDT_MODE_EN, &wdog->mode);
+ 	}
+-#elif defined(CONFIG_MACH_SUN55I_A523)
++#elif defined(CONFIG_MACH_SUN55I_A523) || defined(CONFIG_MACH_SUN60I_A733)
+ 	static const void *wdog = (void *)SUNXI_TIMER_BASE;
+ 
+ 	writel(WDT_CTRL_KEY | WDT_CTRL_RESTART, wdog + WDT_SRST_REG);
+ 	while (1)
+ 		;
 -- 
 Created with Armbian build tools https://github.com/armbian/build
 
