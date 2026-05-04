@@ -1,17 +1,16 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: John Doe <john.doe@somewhere.on.planet>
+From: Marvin Wewer <mwewer37@proton.me>
 Date: Thu, 26 Mar 2026 14:50:26 +0100
-Subject: Patching kernel sun60iw2 files
- include/dt-bindings/power/allwinner,sun60i-a733-pck-600.h
+Subject: power: sun60i-a733: Add power domain bindings for the A733 SoC
 
-Signed-off-by: John Doe <john.doe@somewhere.on.planet>
+Signed-off-by: Marvin Wewer <mwewer37@proton.me>
 ---
  include/dt-bindings/power/allwinner,sun60i-a733-pck-600.h | 17 ++++++++++
  1 file changed, 17 insertions(+)
 
 diff --git a/include/dt-bindings/power/allwinner,sun60i-a733-pck-600.h b/include/dt-bindings/power/allwinner,sun60i-a733-pck-600.h
 new file mode 100644
-index 000000000000..6f05062cabe9
+index 000000000000..111111111111
 --- /dev/null
 +++ b/include/dt-bindings/power/allwinner,sun60i-a733-pck-600.h
 @@ -0,0 +1,17 @@

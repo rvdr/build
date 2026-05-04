@@ -1,17 +1,16 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: John Doe <john.doe@somewhere.on.planet>
+From: Marvin Wewer <mwewer37@proton.me>
 Date: Fri, 27 Mar 2026 14:48:01 +0100
-Subject: Patching kernel sun60iw2 files arch/arm64/boot/dts/allwinner/Makefile
- arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts
+Subject: dts: Adding support for the Orange Pi 4 Pro SBC
 
-Signed-off-by: John Doe <john.doe@somewhere.on.planet>
+Signed-off-by: Marvin Wewer <mwewer37@proton.me>
 ---
  arch/arm64/boot/dts/allwinner/Makefile                       |    3 +
  arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts | 3831 ++++++++++
  2 files changed, 3834 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/allwinner/Makefile b/arch/arm64/boot/dts/allwinner/Makefile
-index 2edfa7bf4ab3..ef7743c9636a 100644
+index 111111111111..222222222222 100644
 --- a/arch/arm64/boot/dts/allwinner/Makefile
 +++ b/arch/arm64/boot/dts/allwinner/Makefile
 @@ -57,5 +57,8 @@ dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h700-anbernic-rg35xx-plus.dtb
@@ -26,7 +25,7 @@ index 2edfa7bf4ab3..ef7743c9636a 100644
 \ No newline at end of file
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts b/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts
 new file mode 100644
-index 000000000000..4468cc2e617e
+index 000000000000..111111111111
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733-orangepi-4-pro.dts
 @@ -0,0 +1,3270 @@

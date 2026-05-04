@@ -1,26 +1,21 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: John Doe <john.doe@somewhere.on.planet>
+From: Marvin Wewer <mwewer37@proton.me>
 Date: Sat, 28 Mar 2026 12:59:47 +0100
-Subject: Patching u-boot sunxi64 files arch/arm/dts/Makefile
- dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7a.dts dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7z.dts
- dts/upstream/src/arm64/allwinner/sun60i-a733-orangepi-4-pro.dts dts/upstream/src/arm64/allwinner/sun60i-a733.dtsi
- include/configs/sun60i.h arch/arm/mach-sunxi/Kconfig
- arch/arm/mach-sunxi/board.c 
-
-Signed-off-by: John Doe <john.doe@somewhere.on.planet>
+Subject: dts: Add support for SUN60I A733 SoC and related boards
+Signed-off-by: Marvin Wewer <mwewer37@proton.me>
 ---
  arch/arm/dts/Makefile                       			 |    4 +
- dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7a.dts      | 1333 ++++++++++
- dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7z.dts      | 1333 ++++++++++
- dts/upstream/src/arm64/allwinner/sun60i-a733-orangepi-4-pro.dts | 1333 ++++++++++
- dts/upstream/src/arm64/allwinner/sun60i-a733.dtsi               |  508 ++++
- include/configs/sun60i.h 		     			 | 11 ++++++++++
+ dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7a.dts      |  475 ++++++++++
+ dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7z.dts      |  476 ++++++++++
+ dts/upstream/src/arm64/allwinner/sun60i-a733-orangepi-4-pro.dts |  377 ++++++++++
+ dts/upstream/src/arm64/allwinner/sun60i-a733.dtsi               | 1150 ++++
+ include/configs/sun60i.h 		     			 |   11 ++++++++++
  arch/arm/mach-sunxi/Kconfig                 			 |   39 +
- arch/arm/mach-sunxi/board.c 		     			 | 4 ++++
- 6 files changed, 4535 insertions(+), 3 deletions(-)
+ arch/arm/mach-sunxi/board.c 		     			 |    4 ++++
+ 8 files changed, 2533 insertions(+), 3 deletions(-)
 
 diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
-index fcad6fb2fc7..7610f9a305e 100644
+index 111111111111..222222222222 100644
 --- a/arch/arm/dts/Makefile
 +++ b/arch/arm/dts/Makefile
 @@ -690,10 +690,14 @@ dtb-$(CONFIG_MACH_SUN50I) += \
@@ -40,7 +35,7 @@ index fcad6fb2fc7..7610f9a305e 100644
  	vf610-bk4r1.dtb
 diff --git a/dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7a.dts b/dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7a.dts
 new file mode 100644
-index 00000000000..eec2361a694
+index 000000000000..111111111111
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7a.dts
 @@ -0,0 +1,475 @@
@@ -521,7 +516,7 @@ index 00000000000..eec2361a694
 +};
 diff --git a/dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7z.dts b/dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7z.dts
 new file mode 100644
-index 00000000000..50e1cc380e9
+index 000000000000..111111111111
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun60i-a733-cubie-a7z.dts
 @@ -0,0 +1,476 @@
@@ -1003,7 +998,7 @@ index 00000000000..50e1cc380e9
 +};
 diff --git a/dts/upstream/src/arm64/allwinner/sun60i-a733-orangepi-4-pro.dts b/dts/upstream/src/arm64/allwinner/sun60i-a733-orangepi-4-pro.dts
 new file mode 100644
-index 00000000000..429fe10ac64
+index 000000000000..111111111111
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun60i-a733-orangepi-4-pro.dts
 @@ -0,0 +1,377 @@
@@ -1386,7 +1381,7 @@ index 00000000000..429fe10ac64
 +};
 diff --git a/dts/upstream/src/arm64/allwinner/sun60i-a733.dtsi b/dts/upstream/src/arm64/allwinner/sun60i-a733.dtsi
 new file mode 100644
-index 00000000000..722fecfc240
+index 000000000000..111111111111
 --- /dev/null
 +++ b/dts/upstream/src/arm64/allwinner/sun60i-a733.dtsi
 @@ -0,0 +1,1150 @@
@@ -2542,7 +2537,7 @@ index 00000000000..722fecfc240
 +};
 diff --git a/include/configs/sun60i.h b/include/configs/sun60i.h
 new file mode 100644
-index 00000000000..70649366c1c
+index 000000000000..111111111111
 --- /dev/null
 +++ b/include/configs/sun60i.h
 @@ -0,0 +1,11 @@
@@ -2558,7 +2553,7 @@ index 00000000000..70649366c1c
 +
 +#endif /* __CONFIG_H */
 diff --git a/arch/arm/mach-sunxi/Kconfig b/arch/arm/mach-sunxi/Kconfig
-index e979ee4a2cc..26732300509 100644
+index 111111111111..222222222222 100644
 --- a/arch/arm/mach-sunxi/Kconfig
 +++ b/arch/arm/mach-sunxi/Kconfig
 @@ -59,12 +59,17 @@ config DRAM_SUN50I_A133
@@ -2759,7 +2754,7 @@ index e979ee4a2cc..26732300509 100644
  
  config SYS_SOC
 diff --git a/arch/arm/mach-sunxi/board.c b/arch/arm/mach-sunxi/board.c
-index 432b1c10f92..e21fd5c4413 100644
+index 111111111111..222222222222 100644
 --- a/arch/arm/mach-sunxi/board.c
 +++ b/arch/arm/mach-sunxi/board.c
 @@ -143,10 +143,14 @@ static int gpio_init(void)

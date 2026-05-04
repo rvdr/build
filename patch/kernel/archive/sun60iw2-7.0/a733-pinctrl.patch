@@ -1,11 +1,9 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: John Doe <john.doe@somewhere.on.planet>
+From: Marvin Wewer <mwewer37@proton.me>
 Date: Thu, 26 Mar 2026 15:02:37 +0100
-Subject: Patching kernel sun60iw2 files drivers/pinctrl/sunxi/Kconfig
- drivers/pinctrl/sunxi/Makefile drivers/pinctrl/sunxi/pinctrl-sun60i-a733-r.c
- drivers/pinctrl/sunxi/pinctrl-sun60i-a733.c include/dt-bindings/gpio/sun4i-gpio.h
+Subject: pinctrl: sunxi: Add support for the Allwinner A733 PIO
 
-Signed-off-by: John Doe <john.doe@somewhere.on.planet>
+Signed-off-by: Marvin Wewer <mwewer37@proton.me>
 ---
  drivers/pinctrl/sunxi/Kconfig                 |   10 +
  drivers/pinctrl/sunxi/Makefile                |    2 +
@@ -15,7 +13,7 @@ Signed-off-by: John Doe <john.doe@somewhere.on.planet>
  4 files changed, 3036 insertions(+)
 
 diff --git a/drivers/pinctrl/sunxi/Kconfig b/drivers/pinctrl/sunxi/Kconfig
-index dc62eba96348..22879f3a4a12 100644
+index 111111111111..222222222222 100644
 --- a/drivers/pinctrl/sunxi/Kconfig
 +++ b/drivers/pinctrl/sunxi/Kconfig
 @@ -139,6 +139,16 @@ config PINCTRL_SUN55I_A523
@@ -36,7 +34,7 @@ index dc62eba96348..22879f3a4a12 100644
 +
  endif
 diff --git a/drivers/pinctrl/sunxi/Makefile b/drivers/pinctrl/sunxi/Makefile
-index 951b3f1e4b4f..bfda36c7391c 100644
+index 111111111111..222222222222 100644
 --- a/drivers/pinctrl/sunxi/Makefile
 +++ b/drivers/pinctrl/sunxi/Makefile
 @@ -29,5 +29,7 @@ obj-$(CONFIG_PINCTRL_SUN50I_H616)	+= pinctrl-sun50i-h616.o
@@ -49,7 +47,7 @@ index 951b3f1e4b4f..bfda36c7391c 100644
 +obj-$(CONFIG_PINCTRL_SUN60I_A733_R)	+= pinctrl-sun60i-a733-r.o
 diff --git a/drivers/pinctrl/sunxi/pinctrl-sun60i-a733-r.c b/drivers/pinctrl/sunxi/pinctrl-sun60i-a733-r.c
 new file mode 100644
-index 000000000000..d8d46aae1a59
+index 000000000000..111111111111
 --- /dev/null
 +++ b/drivers/pinctrl/sunxi/pinctrl-sun60i-a733-r.c
 @@ -0,0 +1,273 @@
@@ -328,7 +326,7 @@ index 000000000000..d8d46aae1a59
 +MODULE_VERSION(SUNXI_R_PINCTRL_VERSION);
 diff --git a/drivers/pinctrl/sunxi/pinctrl-sun60i-a733.c b/drivers/pinctrl/sunxi/pinctrl-sun60i-a733.c
 new file mode 100644
-index 000000000000..d61cc9ec66e4
+index 000000000000..111111111111
 --- /dev/null
 +++ b/drivers/pinctrl/sunxi/pinctrl-sun60i-a733.c
 @@ -0,0 +1,1987 @@
@@ -2321,7 +2319,7 @@ index 000000000000..d61cc9ec66e4
 +MODULE_VERSION(SUNXI_PINCTRL_VERSION);
 diff --git a/include/dt-bindings/gpio/sun4i-gpio.h b/include/dt-bindings/gpio/sun4i-gpio.h
 new file mode 100644
-index 000000000000..44344c1ff16f
+index 000000000000..111111111111
 --- /dev/null
 +++ b/include/dt-bindings/gpio/sun4i-gpio.h
 @@ -0,0 +1,28 @@

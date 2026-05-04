@@ -1,27 +1,22 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: John Doe <john.doe@somewhere.on.planet>
+From: Marvin Wewer <mwewer37@proton.me>
 Date: Sat, 28 Mar 2026 22:37:22 +0100
-Subject: Patching u-boot sunxi64 files arch/arm/mach-sunxi/Makefile
- arch/arm/mach-sunxi/clock_sun60i.c
- arch/arm/mach-sunxi/cpu_info.c
- arch/arm/mach-sunxi/dram_timings/Makefile arch/arm/mach-sunxi/dram_sun60i_a733.c
- arch/arm/mach-sunxi/dram_timings/a733_lpddr5.c arch/arm/include/asm/arch-sunxi/dram.h
- arch/arm/include/asm/arch-sunxi/dram_sun60i_a733.h 
+Subject: Adding dram support for the A733 SoC
 
-Signed-off-by: John Doe <john.doe@somewhere.on.planet>
+Signed-off-by: Marvin Wewer <mwewer37@proton.me>
 ---
- arch/arm/mach-sunxi/Makefile                   |    2 +
- arch/arm/mach-sunxi/clock_sun60i.c           |  557 ++++
- arch/arm/mach-sunxi/cpu_info.c 		| 2 ++
- arch/arm/mach-sunxi/dram_timings/Makefile      | 1 +
- arch/arm/mach-sunxi/dram_sun60i_a733.c                              | 201 ++++++++++
- arch/arm/mach-sunxi/dram_timings/a733_lpddr5.c                      |  80 ++++
+ arch/arm/mach-sunxi/Makefile                   		     |    2 +
+ arch/arm/mach-sunxi/clock_sun60i.c           			     |  557 ++++
+ arch/arm/mach-sunxi/cpu_info.c 				     |    2 ++
+ arch/arm/mach-sunxi/dram_timings/Makefile      		     |    1 +
+ arch/arm/mach-sunxi/dram_sun60i_a733.c                              |  493 ++++++++++
+ arch/arm/mach-sunxi/dram_timings/a733_lpddr5.c                      |  121 ++++
  arch/arm/include/asm/arch-sunxi/dram.h                              |   2 +
- arch/arm/include/asm/arch-sunxi/dram_sun60i_a733.h                  | 152 ++++++++++
- 9 files changed, 2400 insertions(+)
+ arch/arm/include/asm/arch-sunxi/dram_sun60i_a733.h                  | 105 ++++++++++
+ 8 files changed, 1283 insertions(+)
 
 diff --git a/arch/arm/mach-sunxi/Makefile b/arch/arm/mach-sunxi/Makefile
-index 9c79b55abf3..bc105108198 100644
+index 111111111111..222222222222 100644
 --- a/arch/arm/mach-sunxi/Makefile
 +++ b/arch/arm/mach-sunxi/Makefile
 @@ -15,10 +15,11 @@ obj-$(CONFIG_MACH_SUNIV)	+= clock_sun6i.o
@@ -47,7 +42,7 @@ index 9c79b55abf3..bc105108198 100644
  endif
 diff --git a/arch/arm/mach-sunxi/clock_sun60i.c b/arch/arm/mach-sunxi/clock_sun60i.c
 new file mode 100644
-index 00000000000..70c901cf0cc
+index 000000000000..111111111111
 --- /dev/null
 +++ b/arch/arm/mach-sunxi/clock_sun60i.c
 @@ -0,0 +1,557 @@
@@ -196,7 +191,7 @@ index 00000000000..70c901cf0cc
 +
 +	factor_n  = ((reg_val >> 8) & 0xff) + 1;
 +	factor_m1 = ((reg_val >> 0) & 0x01) + 1;
-+	ddrpll    = 24 * factor_n / factor_m1;
++	ddrpll = 24 * factor_n / factor_m1;
 +
 +	return ddrpll;
 +}
@@ -214,7 +209,7 @@ index 00000000000..70c901cf0cc
 +	factor_n  = ((reg_val >> 8) & 0xff) + 1;
 +	factor_p0 = ((reg_val >> 16) & 0x07) + 1;
 +	factor_m1 = ((reg_val >> 1) & 0x01) + 1;
-+	pll6      = (24 * factor_n / factor_p0 / factor_m1) / div;
++	pll6	  = (24 * factor_n / factor_p0 / factor_m1) / div;
 +
 +	return pll6;
 +}
@@ -252,22 +247,22 @@ index 00000000000..70c901cf0cc
 +	case 3://CPU_L_PP/P
 +		reg_val  = readl(SUNXI_CPU_PLL_CFG_BASE + CPU_L_PLL_CONTROL_REG);
 +		factor_n = ((reg_val >> 8) & 0xff);
-+		div_m    = ((reg_val >> 0) & 0x3) + 1;
++		div_m	= ((reg_val >> 0) & 0x3) + 1;
 +		reg_val  = readl(SUNXI_CPU_PLL_CFG_BASE + CPU_L_PLL_REG);
-+		div_p    = 1<<((reg_val >>16) & 0x3);
++		div_p	= 1<<((reg_val >>16) & 0x3);
 +		clock = get_hosc();
 +		clock = clock*factor_n/div_m/div_p;
 +		break;
 +	case 4://PERI0PLL_DIV2
 +		reg_val  = readl(SUNXI_CCMU_BASE + PLL_PERI0_CTRL_REG);
 +		factor_n = ((reg_val >> 8) & 0xff) + 1;
-+		div_p    = ((reg_val >> 20) & 0x3) + 1;
++		div_p	= ((reg_val >> 20) & 0x3) + 1;
 +		clock = 24*factor_n/div_p;
 +		break;
 +	case 5://CPU_BACK_PLL
 +		reg_val  = readl(SUNXI_CPU_PLL_CFG_BASE + CPU_BACK_PLL_CONTROL_REG);
 +		factor_n = ((reg_val >> 8) & 0xff) + 1;
-+		div_p    = ((reg_val >> 20) & 0x3) + 1;
++		div_p	= ((reg_val >> 20) & 0x3) + 1;
 +		clock = get_hosc();
 +		clock = clock*factor_n/div_p;
 +		break;
@@ -430,13 +425,13 @@ index 00000000000..70c901cf0cc
 +	unsigned int reg_val;
 +	//usb 0
 +	setbits_le32(SUNXI_CCM_BASE + USB0_CLK_REG,
-+		     BIT(USB0_CLK_REG_USB0_PHY_RSTN_OFFSET));
++			 BIT(USB0_CLK_REG_USB0_PHY_RSTN_OFFSET));
 +	setbits_le32(SUNXI_CCM_BASE + USB0_BGR_REG,
-+		     BIT(USB0_BGR_REG_USB0_DEVICE_GATING_OFFSET));
++			 BIT(USB0_BGR_REG_USB0_DEVICE_GATING_OFFSET));
 +	clrbits_le32(SUNXI_CCM_BASE + USB0_BGR_REG,
-+		     BIT(USB0_BGR_REG_USB0_DEVICE_RST_OFFSET));
++			 BIT(USB0_BGR_REG_USB0_DEVICE_RST_OFFSET));
 +	setbits_le32(SUNXI_CCM_BASE + USB0_BGR_REG,
-+		     BIT(USB0_BGR_REG_USB0_DEVICE_RST_OFFSET));
++			 BIT(USB0_BGR_REG_USB0_DEVICE_RST_OFFSET));
 +
 +	/* FIXME: Reference from sun60iw2 USB2.0 DRD operation guide */
 +	reg_val = readl(SUNXI_USBOTG_BASE + USBC_REG_o_SEL);
@@ -460,18 +455,18 @@ index 00000000000..70c901cf0cc
 +	writel(reg_val, (volatile void __iomem *)(SUNXI_USBOTG_BASE + USBC_REG_o_PHYCTL));
 +
 +	clrbits_le32(SUNXI_CCM_BASE + USB0_BGR_REG,
-+		     BIT(USB0_BGR_REG_USB0_DEVICE_RST_OFFSET) |
-+			     BIT(USB0_BGR_REG_USB0_EHCI_RST_OFFSET));
++			 BIT(USB0_BGR_REG_USB0_DEVICE_RST_OFFSET) |
++				 BIT(USB0_BGR_REG_USB0_EHCI_RST_OFFSET));
 +	__msdelay(1);
 +
 +	clrbits_le32(SUNXI_CCM_BASE + USB0_BGR_REG,
-+		     BIT(USB0_BGR_REG_USB0_DEVICE_GATING_OFFSET) |
-+			     BIT(USB0_BGR_REG_USB0_EHCI_GATING_OFFSET));
++			 BIT(USB0_BGR_REG_USB0_DEVICE_GATING_OFFSET) |
++				 BIT(USB0_BGR_REG_USB0_EHCI_GATING_OFFSET));
 +	__msdelay(1);
 +
 +	clrbits_le32(SUNXI_CCM_BASE + USB0_CLK_REG,
-+		     BIT(USB0_CLK_REG_USB0_PHY_RSTN_OFFSET) |
-+			     BIT(USB0_CLK_REG_USB0_CLKEN_OFFSET));
++			 BIT(USB0_CLK_REG_USB0_PHY_RSTN_OFFSET) |
++				 BIT(USB0_CLK_REG_USB0_CLKEN_OFFSET));
 +	__msdelay(1);
 +
 +	return 0;
@@ -609,7 +604,7 @@ index 00000000000..70c901cf0cc
 +	return 0;
 +}
 diff --git a/arch/arm/mach-sunxi/cpu_info.c b/arch/arm/mach-sunxi/cpu_info.c
-index c3a51d9956e..219fa6e113c 100644
+index 111111111111..222222222222 100644
 --- a/arch/arm/mach-sunxi/cpu_info.c
 +++ b/arch/arm/mach-sunxi/cpu_info.c
 @@ -106,10 +106,12 @@ int print_cpuinfo(void)
@@ -626,7 +621,7 @@ index c3a51d9956e..219fa6e113c 100644
  #endif
  	return 0;
 diff --git a/arch/arm/mach-sunxi/dram_timings/Makefile b/arch/arm/mach-sunxi/dram_timings/Makefile
-index 5de9fd5aab4..830a23a3c63 100644
+index 111111111111..222222222222 100644
 --- a/arch/arm/mach-sunxi/dram_timings/Makefile
 +++ b/arch/arm/mach-sunxi/dram_timings/Makefile
 @@ -8,5 +8,6 @@ obj-$(CONFIG_SUNXI_DRAM_H616_LPDDR3)	+= h616_lpddr3.o
@@ -638,10 +633,10 @@ index 5de9fd5aab4..830a23a3c63 100644
 +obj-$(CONFIG_SUNXI_DRAM_A733_LPDDR5)	+= a733_lpddr5.o
 diff --git a/arch/arm/mach-sunxi/dram_sun60i_a733.c b/arch/arm/mach-sunxi/dram_sun60i_a733.c
 new file mode 100644
-index 00000000000..0935cfd20ff
+index 000000000000..111111111111
 --- /dev/null
 +++ b/arch/arm/mach-sunxi/dram_sun60i_a733.c
-@@ -0,0 +1,444 @@
+@@ -0,0 +1,493 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
 + * sun60iw2 (A733/T527) platform DRAM controller driver
@@ -660,136 +655,128 @@ index 00000000000..0935cfd20ff
 +#include <linux/bitops.h>
 +#include <linux/delay.h>
 +
-+/* SoC Specific Base Addresses for sun60iw2 */
-+#define SUNXI_DRAM_COM_BASE  0x0A020000
-+#define SUNXI_DRAM_CTL0_BASE 0x0A100000
-+#define SUNXI_DRAM_PHY0_BASE 0x0A110000
-+#define SUNXI_DRAM_CTL1_BASE 0x0A500000
-+#define SUNXI_DRAM_PHY1_BASE 0x0A510000
-+#define SUNXI_DRAM_SRAM_BASE 0x0A900000 // PHY SRAM for Mailbox/Training
-+
 +static void mctl_sys_init(u32 clk_rate)
 +{
-+    void * const ccm = (void *)SUNXI_CCM_BASE;
++	void * const ccm = (void *)SUNXI_CCM_BASE;
 +
-+    /* Put all DRAM-related blocks to reset state */
-+    clrbits_le32(ccm + CCU_H6_MBUS_CFG, MBUS_ENABLE);
-+    clrbits_le32(ccm + CCU_H6_MBUS_CFG, MBUS_RESET);
-+    setbits_le32(ccm + CCU_H6_MBUS_CFG, MBUS_UPDATE);
-+    clrbits_le32(ccm + CCU_H6_DRAM_GATE_RESET, BIT(GATE_SHIFT));
-+    udelay(5);
-+    clrbits_le32(ccm + CCU_H6_DRAM_GATE_RESET, BIT(RESET_SHIFT));
-+    clrbits_le32(ccm + CCU_H6_PLL5_CFG, CCM_PLL_CTRL_EN);
-+    clrsetbits_le32(ccm + CCU_H6_DRAM_CLK_CFG,
-+                    DRAM_CLK_ENABLE, DRAM_CLK_UPDATE);
++	/* Put all DRAM-related blocks to reset state */
++	clrbits_le32(ccm + CCU_H6_MBUS_CFG, MBUS_ENABLE);
++	clrbits_le32(ccm + CCU_H6_MBUS_CFG, MBUS_RESET);
++	setbits_le32(ccm + CCU_H6_MBUS_CFG, MBUS_UPDATE);
++	clrbits_le32(ccm + CCU_H6_DRAM_GATE_RESET, BIT(GATE_SHIFT));
++	udelay(5);
++	clrbits_le32(ccm + CCU_H6_DRAM_GATE_RESET, BIT(RESET_SHIFT));
++	clrbits_le32(ccm + CCU_H6_PLL5_CFG, CCM_PLL_CTRL_EN);
++	clrsetbits_le32(ccm + CCU_H6_DRAM_CLK_CFG,
++					DRAM_CLK_ENABLE, DRAM_CLK_UPDATE);
 +
-+    udelay(5);
++	udelay(5);
 +
-+    /* Set PLL5 rate to doubled DRAM clock rate */
-+    writel(CCM_PLL_CTRL_EN | CCM_PLL_LDO_EN | CCM_PLL_LOCK_EN |
-+           CCM_PLL_OUT_EN | CCM_PLL5_CTRL_N(clk_rate * 2 / 24),
-+           ccm + CCU_H6_PLL5_CFG);
-+    mctl_await_completion(ccm + CCU_H6_PLL5_CFG,
-+                          CCM_PLL_LOCK, CCM_PLL_LOCK);
++	/* Set PLL5 rate to doubled DRAM clock rate */
++	writel(CCM_PLL_CTRL_EN | CCM_PLL_LDO_EN | CCM_PLL_LOCK_EN |
++		   CCM_PLL_OUT_EN | CCM_PLL5_CTRL_N(clk_rate * 2 / 24),
++		   ccm + CCU_H6_PLL5_CFG);
++	mctl_await_completion(ccm + CCU_H6_PLL5_CFG,
++						  CCM_PLL_LOCK, CCM_PLL_LOCK);
 +
-+    /* Configure DRAM mod clock */
-+    writel(DRAM_CLK_SRC_PLL5, ccm + CCU_H6_DRAM_CLK_CFG);
-+    writel(BIT(RESET_SHIFT), ccm + CCU_H6_DRAM_GATE_RESET);
-+    udelay(5);
-+    setbits_le32(ccm + CCU_H6_DRAM_GATE_RESET, BIT(GATE_SHIFT));
++	/* Configure DRAM mod clock */
++	writel(DRAM_CLK_SRC_PLL5, ccm + CCU_H6_DRAM_CLK_CFG);
++	writel(BIT(RESET_SHIFT), ccm + CCU_H6_DRAM_GATE_RESET);
++	udelay(5);
++	setbits_le32(ccm + CCU_H6_DRAM_GATE_RESET, BIT(GATE_SHIFT));
 +
-+    /* Configure MBUS and enable DRAM clock */
-+    setbits_le32(ccm + CCU_H6_MBUS_CFG, MBUS_RESET | MBUS_UPDATE);
-+    setbits_le32(ccm + CCU_H6_MBUS_CFG, MBUS_ENABLE | MBUS_UPDATE);
++	/* Configure MBUS and enable DRAM clock */
++	setbits_le32(ccm + CCU_H6_MBUS_CFG, MBUS_RESET | MBUS_UPDATE);
++	setbits_le32(ccm + CCU_H6_MBUS_CFG, MBUS_ENABLE | MBUS_UPDATE);
 +
-+    clrsetbits_le32(ccm + CCU_H6_DRAM_CLK_CFG, DRAM_CLK_M_MASK,
-+                    DRAM_CLK_ENABLE | DRAM_CLK_UPDATE | DRAM_CLK_M(4));
-+    udelay(5);
++	clrsetbits_le32(ccm + CCU_H6_DRAM_CLK_CFG, DRAM_CLK_M_MASK,
++					DRAM_CLK_ENABLE | DRAM_CLK_UPDATE | DRAM_CLK_M(4));
++	udelay(5);
 +}
 +
 +static void mctl_set_addrmap(const struct dram_config *config)
 +{
-+    void * const mctl_ctl = (void *)SUNXI_DRAM_CTL0_BASE;
-+    u8 cols = config->cols;
-+    u8 rows = config->rows;
-+    u8 ranks = config->ranks;
++	void * const mctl_ctl = (void *)SUNXI_DRAM_CTL0_BASE;
++	u8 cols = config->cols;
++	u8 rows = config->rows;
++	u8 ranks = config->ranks;
 +
-+    if (!config->bus_full_width)
-+        cols -= 1;
++	if (!config->bus_full_width)
++		cols -= 1;
 +
-+    /* Ranks (Offset 0x200) */
-+    if (ranks == 2)
-+        writel(0x1F00 | (rows + cols - 3), mctl_ctl + 0x200);
-+    else
-+        writel(0x1F1F, mctl_ctl + 0x200);
++	/* Ranks (Offset 0x200) */
++	if (ranks == 2)
++		writel(0x1F00 | (rows + cols - 3), mctl_ctl + 0x200);
++	else
++		writel(0x1F1F, mctl_ctl + 0x200);
 +
-+    /* Banks, hardcoded to 8 banks now (Offset 0x204) */
-+    writel((cols - 2) | (cols - 2) << 8 | (cols - 2) << 16, mctl_ctl + 0x204);
++	/* Banks, hardcoded to 8 banks now (Offset 0x204) */
++	writel((cols - 2) | (cols - 2) << 8 | (cols - 2) << 16, mctl_ctl + 0x204);
 +
-+    /* Columns (Offsets 0x208, 0x20C, 0x210) */
-+    writel(0, mctl_ctl + 0x208);
-+    switch (cols) {
-+    case 7:
-+        writel(0x1F1F1F00, mctl_ctl + 0x20C);
-+        writel(0x1F1F, mctl_ctl + 0x210);
-+        break;
-+    case 8:
-+        writel(0x1F1F0000, mctl_ctl + 0x20C);
-+        writel(0x1F1F, mctl_ctl + 0x210);
-+        break;
-+    case 9:
-+        writel(0x1F000000, mctl_ctl + 0x20C);
-+        writel(0x1F1F, mctl_ctl + 0x210);
-+        break;
-+    case 10:
-+        writel(0, mctl_ctl + 0x20C);
-+        writel(0x1F1F, mctl_ctl + 0x210);
-+        break;
-+    case 11:
-+        writel(0, mctl_ctl + 0x20C);
-+        writel(0x1F00, mctl_ctl + 0x210);
-+        break;
-+    case 12:
-+        writel(0, mctl_ctl + 0x20C);
-+        writel(0, mctl_ctl + 0x210);
-+        break;
-+    default:
-+        panic("Unsupported DRAM configuration: column number invalid\n");
-+    }
++	/* Columns (Offsets 0x208, 0x20C, 0x210) */
++	writel(0, mctl_ctl + 0x208);
++	switch (cols) {
++	case 7:
++		writel(0x1F1F1F00, mctl_ctl + 0x20C);
++		writel(0x1F1F, mctl_ctl + 0x210);
++		break;
++	case 8:
++		writel(0x1F1F0000, mctl_ctl + 0x20C);
++		writel(0x1F1F, mctl_ctl + 0x210);
++		break;
++	case 9:
++		writel(0x1F000000, mctl_ctl + 0x20C);
++		writel(0x1F1F, mctl_ctl + 0x210);
++		break;
++	case 10:
++		writel(0, mctl_ctl + 0x20C);
++		writel(0x1F1F, mctl_ctl + 0x210);
++		break;
++	case 11:
++		writel(0, mctl_ctl + 0x20C);
++		writel(0x1F00, mctl_ctl + 0x210);
++		break;
++	case 12:
++		writel(0, mctl_ctl + 0x20C);
++		writel(0, mctl_ctl + 0x210);
++		break;
++	default:
++		panic("Unsupported DRAM configuration: column number invalid\n");
++	}
 +
-+    /* Rows (Offsets 0x214, 0x218, 0x21C) */
-+    writel((cols - 3) | ((cols - 3) << 8) | ((cols - 3) << 16) | ((cols - 3) << 24), mctl_ctl + 0x214);
-+    switch (rows) {
-+    case 13:
-+        writel((cols - 3) | 0x0F0F0F00, mctl_ctl + 0x218);
-+        writel(0x0F0F, mctl_ctl + 0x21C);
-+        break;
-+    case 14:
-+        writel((cols - 3) | ((cols - 3) << 8) | 0x0F0F0000, mctl_ctl + 0x218);
-+        writel(0x0F0F, mctl_ctl + 0x21C);
-+        break;
-+    case 15:
-+        writel((cols - 3) | ((cols - 3) << 8) | ((cols - 3) << 16) | 0x0F000000, mctl_ctl + 0x218);
-+        writel(0x0F0F, mctl_ctl + 0x21C);
-+        break;
-+    case 16:
-+        writel((cols - 3) | ((cols - 3) << 8) | ((cols - 3) << 16) | ((cols - 3) << 24), mctl_ctl + 0x218);
-+        writel(0x0F0F, mctl_ctl + 0x21C);
-+        break;
-+    case 17:
-+        writel((cols - 3) | ((cols - 3) << 8) | ((cols - 3) << 16) | ((cols - 3) << 24), mctl_ctl + 0x218);
-+        writel((cols - 3) | 0x0F00, mctl_ctl + 0x21C);
-+        break;
-+    case 18:
-+        writel((cols - 3) | ((cols - 3) << 8) | ((cols - 3) << 16) | ((cols - 3) << 24), mctl_ctl + 0x218);
-+        writel((cols - 3) | ((cols - 3) << 8), mctl_ctl + 0x21C);
-+        break;
-+    default:
-+        panic("Unsupported DRAM configuration: row number invalid\n");
-+    }
++	/* Rows (Offsets 0x214, 0x218, 0x21C) */
++	writel((cols - 3) | ((cols - 3) << 8) | ((cols - 3) << 16) | ((cols - 3) << 24), mctl_ctl + 0x214);
++	switch (rows) {
++	case 13:
++		writel((cols - 3) | 0x0F0F0F00, mctl_ctl + 0x218);
++		writel(0x0F0F, mctl_ctl + 0x21C);
++		break;
++	case 14:
++		writel((cols - 3) | ((cols - 3) << 8) | 0x0F0F0000, mctl_ctl + 0x218);
++		writel(0x0F0F, mctl_ctl + 0x21C);
++		break;
++	case 15:
++		writel((cols - 3) | ((cols - 3) << 8) | ((cols - 3) << 16) | 0x0F000000, mctl_ctl + 0x218);
++		writel(0x0F0F, mctl_ctl + 0x21C);
++		break;
++	case 16:
++		writel((cols - 3) | ((cols - 3) << 8) | ((cols - 3) << 16) | ((cols - 3) << 24), mctl_ctl + 0x218);
++		writel(0x0F0F, mctl_ctl + 0x21C);
++		break;
++	case 17:
++		writel((cols - 3) | ((cols - 3) << 8) | ((cols - 3) << 16) | ((cols - 3) << 24), mctl_ctl + 0x218);
++		writel((cols - 3) | 0x0F00, mctl_ctl + 0x21C);
++		break;
++	case 18:
++		writel((cols - 3) | ((cols - 3) << 8) | ((cols - 3) << 16) | ((cols - 3) << 24), mctl_ctl + 0x218);
++		writel((cols - 3) | ((cols - 3) << 8), mctl_ctl + 0x21C);
++		break;
++	default:
++		panic("Unsupported DRAM configuration: row number invalid\n");
++	}
 +
-+    /* Bank groups, DDR4 only (Offset 0x220) */
-+    writel(0x3F3F, mctl_ctl + 0x220);
++	/* Bank groups, DDR4 only (Offset 0x220) */
++	writel(0x3F3F, mctl_ctl + 0x220);
 +}
 +
 +/* * from IDA sub_25C34
@@ -797,18 +784,18 @@ index 00000000000..0935cfd20ff
 + */
 +static void mctl_phy_lane_init(const struct dram_para *para, u32 ch)
 +{
-+    /* Offset for Channel 1 is 0x400000 */
-+    u32 ch_offset = ch * 0x400000;
-+    void *phy_base = (void *)(SUNXI_DRAM_PHY0_BASE + ch_offset);
-+    void *ctl_base = (void *)(SUNXI_DRAM_CTL0_BASE + ch_offset);
++	/* Offset for Channel 1 is 0x400000 */
++	u32 ch_offset = ch * 0x400000;
++	void *phy_base = (void *)(uintptr_t)(SUNXI_DRAM_PHY0_BASE + ch_offset);
++	void *ctl_base = (void *)(uintptr_t)(SUNXI_DRAM_CTL0_BASE + ch_offset);
 +
-+    clrsetbits_le32(phy_base + 0x280, 0x7F00, 0x3400);
++	clrsetbits_le32(phy_base + 0x280, 0x7F00, 0x3400);
 +
-+    /* Init the 4 Data Slices (Byte Lanes) */
-+    writel(255, ctl_base + 0x0A00);
-+    writel(255, ctl_base + 0x100A00);
-+    writel(255, ctl_base + 0x200A00);
-+    writel(255, ctl_base + 0x300A00);
++	/* Init the 4 Data Slices (Byte Lanes) */
++	writel(255, ctl_base + 0x000A00);
++	writel(255, ctl_base + 0x100C00); // Offset +0x100000
++	writel(255, ctl_base + 0x200C00); // Offset +0x100000
++	writel(255, ctl_base + 0x300C00); // Offset +0x100000
 +}
 +
 +/* * from IDA sub_258C8
@@ -816,57 +803,92 @@ index 00000000000..0935cfd20ff
 + */
 +static void mctl_phy_bit_delay_compensation(const struct dram_para *para, u32 ch)
 +{
-+    u32 ch_offset = ch * 0x400000;
-+    void *sram_base = (void *)(SUNXI_DRAM_SRAM_BASE + ch_offset);
++	u32 ch_offset = ch * 0x400000;
++	void *sram_base = (void *)(uintptr_t)(SUNXI_DRAM_CTL0_BASE + ch_offset + 0x30000);
 +
-+    /* Using dram_para1 (offset 24 in FEX) */
-+    u32 p1 = para->para1;
-+    u8 v4 = p1 & 0xF;
-+    u8 v5 = (p1 >> 4) & 0xFF;
-+    u8 v6 = (p1 >> 12) & 3;
-+    u16 v7 = p1 >> 14;
-+    u32 v8 = v7 << 8;
-+    u32 v9 = (v7 << 8) | (v7 << 16);
++	/* Using dram_para1 (offset 0x18 / 24 dezimal in boot0) */
++	u32 p1 = para->para1;
++	u8 v4 = p1 & 0xF;
++	u8 v5 = (p1 >> 4) & 0xFF;
++	u8 v6 = (p1 >> 12) & 3;
++	u16 v7 = p1 >> 14;
++	u32 v8 = v7 << 8;
++	u32 v9 = (v7 << 8) | (v7 << 16);
 +
-+    u32 v10 = 0;
++	/* * Flag: Entspricht MEMORY[0x66C18] aus boot0. 
++	 * Oft genutzt für Half-DQ / spezielles Die-Routing. Standardmäßig false.
++	 */
++	bool flag = false;
 +
-+    /* LPDDR5 specific (Type 9) */
-+    if (para->type == 9) {
-+        v10 = v7 | 0x1F1F0000 | v8;
-+        writel(v10, sram_base + 0x14);
++	/* Write to offset 0x18 (IDA: v3[42254342]) */
++	u32 val_0x18 = v9 | (v7 << 24);
++	if (flag) val_0x18 = 0;
++	writel(val_0x18, sram_base + 0x18);
 +
-+        writel((v7 == 2) ? 257 : 16191, sram_base + 0x10);
++	/* Write to offset 0x14 (IDA: v3[42254341]) */
++	u32 val_0x14;
++	switch (v4) {
++		case 8:  val_0x14 = v7 | 0x1F1F1F00; break;
++		case 9:  val_0x14 = v7 | 0x1F1F0000 | v8; break; // LPDDR5
++		case 10: val_0x14 = v7 | 0x1F000000 | v8 | (v7 << 16); break;
++		default: val_0x14 = (v7 << 24) | v7 | v9; break;
++	}
++	if (v4 == 10 && flag) val_0x14 = 520093696;
++	writel(val_0x14, sram_base + 0x14);
 +
-+        u32 v13 = v4 - 3 + v7;
-+        u32 v14 = v13 << 8;
++	/* Write to offset 0x10 (IDA: v3[42254340]) */
++	u32 val_0x10;
++	if (v7 == 2) {
++		val_0x10 = flag ? 2313 : 257;
++	} else {
++		val_0x10 = (v7 == 1) ? 16129 : 16191;
++		if (flag && v7 == 1) val_0x10 = 16137;
++	}
++	writel(val_0x10, sram_base + 0x10);
 +
-+        if (v6 == 3) {
-+            writel(v14 | (v13 << 16) | v13, sram_base + 0x0C);
-+        } else {
-+            writel(v13 | 0x3F0000 | v14, sram_base + 0x0C);
-+        }
++	/* Write to offset 0x0C (IDA: v3[42254339]) */
++	u32 v13 = v4 - 3 + v7;
++	u32 v14 = v13 << 8;
++	u32 val_0x0c;
++	if (v6 == 3) {
++		val_0x0c = v14 | (v13 << 16) | v13;
++	} else {
++		val_0x0c = flag ? ((v4 - 3) | 0x3F0000 | ((v4 - 3) << 8)) : (v13 | 0x3F0000 | v14);
++	}
++	writel(val_0x0c, sram_base + 0x0C);
 +
-+        u32 v16 = v7 + v6 + v4;
-+        u32 v17 = (v16 - 6) | ((v16 - 6) << 8);
-+        u32 v18 = v17 | ((v16 - 6) << 16);
-+        u32 v19 = v18 | ((v16 - 6) << 24);
++	/* Calculate v16 for delays (IDA: v3[42254347] to v3[42254344]) */
++	u32 v16 = v7 + v6 + v4;
++	u32 v17 = (v16 - 6) | ((v16 - 6) << 8);
++	u32 v18 = v17 | ((v16 - 6) << 16);
++	u32 v19 = v18 | ((v16 - 6) << 24);
 +
-+        writel(v17, sram_base + 0x2C);
-+        writel(v19, sram_base + 0x28);
-+        writel(v19, sram_base + 0x24);
-+        writel(v19, sram_base + 0x20);
++	writel(v17, sram_base + 0x2C);
++	writel(v19, sram_base + 0x28);
++	writel(v19, sram_base + 0x24);
++	writel(v19, sram_base + 0x20);
 +
-+        /* Configure Drive Strength based on FEX settings */
-+        switch (v5) {
-+            case 15: writel((v16 - 6) | 0x1F1F1F00, sram_base + 0x1C); break;
-+            case 16: writel(v17 | 0x1F1F0000, sram_base + 0x1C); break;
-+            case 17: writel(v18 | 0x1F000000, sram_base + 0x1C); break;
-+            default: writel(v19, sram_base + 0x1C); break;
-+        }
++	/* Write to offset 0x1C - Drive Strength (IDA: v3[42254343]) */
++	u32 val_0x1c;
++	switch (v5) {
++		case 14: val_0x1c = 0x1F1F1F1F; break; /* 522133279 = 0x1F1F1F1F */
++		case 15: val_0x1c = (v16 - 6) | 0x1F1F1F00; break;
++		case 16: val_0x1c = v17 | 0x1F1F0000; break;
++		case 17: val_0x1c = v18 | 0x1F000000; break;
++		default: val_0x1c = v19; break;
++	}
++	writel(val_0x1c, sram_base + 0x1C);
 +
-+        /* Default delay mapping */
-+        writel(16191, sram_base + 0x04);
-+    }
++	/* Write to offset 0x04 - Delay mapping (IDA: v3[42254337]) */
++	u32 val_0x04;
++	/* *(_DWORD *)(result + 28) == para->para2 */
++	if (para->para2 & 0x1000) {
++		val_0x04 = v5 - 6;
++		val_0x04 = (val_0x04 + v16) | 0x3F00;
++	} else {
++		val_0x04 = 16191;
++	}
++	writel(val_0x04, sram_base + 0x04);
 +}
 +
 +/* * from IDA sub_25AD8
@@ -874,89 +896,109 @@ index 00000000000..0935cfd20ff
 + */
 +static void mctl_ctrl_init_channel(const struct dram_para *para, const struct dram_config *config, u32 ch)
 +{
-+    u32 ch_offset = ch * 0x400000;
-+    void *phy_base = (void *)(SUNXI_DRAM_PHY0_BASE + ch_offset);
++	u32 ch_offset = ch * 0x400000;
++	void *phy_base = (void *)(uintptr_t)(SUNXI_DRAM_PHY0_BASE + ch_offset);
 +
-+    if (para->type == 9) {
-+        clrsetbits_le32(phy_base + 0x10, 0x101, 1); // MSTR
-+    }
++	if (para->type == 9) {
++		clrsetbits_le32(phy_base + 0x10, 0x101, 1); // MSTR
++	}
 +
-+    clrbits_le32(phy_base + 0x18C, 0x3F); // INIT3
-+    clrsetbits_le32(phy_base + 0x180, 0x8FF, 0x800); // INIT0
-+    clrsetbits_le32(phy_base + 0x500, 0x30110111, 0xC0000000); // DFITMG0
++	clrbits_le32(phy_base + 0x18C, 0x3F); // INIT3
++	clrsetbits_le32(phy_base + 0x180, 0x8FF, 0x800); // INIT0
 +
-+    u32 odtcfg = readl(phy_base + 0x280);
-+    if (para->type == 9) {
-+        writel((odtcfg & 0xDFFFFFFF) | 0x80000000, phy_base + 0x280);
-+        writel((readl(phy_base + 0x300) & 0xFF00FF00) | 0xC000C0, phy_base + 0x300);
-+    }
++	writel(0x110111, phy_base + 0x500); // DFITMG0
++	writel(0xC0000000, phy_base + 0x508); // DFITMG1 (Base value)	
 +
-+    setbits_le32(phy_base + 0x288, 1); // ODTMAP
-+    setbits_le32(phy_base + 0x302, 1); // SCHED0
-+    setbits_le32(phy_base + 0x502, 1); // DFITMG1
++	u32 odtcfg = readl(phy_base + 0x280);
++	if (para->type == 9) {
++		writel((odtcfg & 0xDFFFFFFF) | 0x80000000, phy_base + 0x280);
++		writel((readl(phy_base + 0x300) & 0xFF00FF00) | 0xC000C0, phy_base + 0x300);
++	}
 +
-+    clrsetbits_le32(phy_base + 0x510, 0x30015, 0x10015); // DFIMISC
++	setbits_le32(phy_base + 0x288, 1); // ODTMAP
++	setbits_le32(phy_base + 0x308, 1); // SCHED0
++	setbits_le32(phy_base + 0x508, 1); // DFITMG1
 +
-+    /* Write Delay Compensation into SRAM */
-+    mctl_phy_bit_delay_compensation(para, ch);
++	clrsetbits_le32(phy_base + 0x510, 0x30015, 0x10015); // DFIMISC
 +
-+    /* Set Timing Parameters (This function calls your already decoded sub_25198) */
-+    mctl_set_timing_params(config);
++	/* Write Delay Compensation into SRAM */
++	mctl_phy_bit_delay_compensation(para, ch);
 +
-+    /* DFI Init Toggle */
-+    if (para->type == 9) {
-+        clrbits_le32(phy_base + 0xB84, 1);
-+        writel(0, phy_base + 0xC80); // swctl = 0
++	mctl_set_addrmap(config);
 +
-+        clrsetbits_le32(phy_base + 0x510, 0x30015, 0x10004); // dfimisc
-+        writel(1, phy_base + 0xC80); // swctl = 1
-+        while ((readl(phy_base + 0xC84) & 1) == 0); // wait swstat
++	/* Set Timing Parameters (This function calls your already decoded sub_25198) */
++	mctl_set_timing_params(config);
 +
-+        writel(0, phy_base + 0xC80);
-+        clrsetbits_le32(phy_base + 0x510, 0x30015, 0x10014); // dfimisc
-+        writel(1, phy_base + 0xC80);
-+        while ((readl(phy_base + 0xC84) & 1) == 0);
-+    }
++	/* DFI Init Toggle */
++	if (para->type == 9) {
++		clrbits_le32(phy_base + 0xB84, 1);
++		writel(0, phy_base + 0xC80); // swctl = 0
++
++		clrsetbits_le32(phy_base + 0x510, 0x30015, 0x10004); // dfimisc
++		writel(1, phy_base + 0xC80); // swctl = 1
++		while ((readl(phy_base + 0xC84) & 1) == 0); // wait swstat
++
++		writel(0, phy_base + 0xC80);
++		clrsetbits_le32(phy_base + 0x510, 0x30015, 0x10014); // dfimisc
++		writel(1, phy_base + 0xC80);
++		while ((readl(phy_base + 0xC84) & 1) == 0);
++	}
 +}
 +
 +/*
 + * from IDA sub_250B4
 + * Finalizes training and configures NSI Bus QoS
 + */
-+static void sunxi_post_training_and_nsi_init(const struct dram_para *para, int dual_channel)
++static void sunxi_post_training_and_nsi_init(const struct dram_para *para)
 +{
-+    void *nsi_base = (void *)0x02020000;
++	void *nsi_base = (void *)(uintptr_t)SUNXI_NSI_BASE;
++	void *axi_hif0 = (void *)(uintptr_t)SUNXI_CPU_AXI2HIF0_BASE; 
++	void *axi_hif1 = (void *)(uintptr_t)SUNXI_CPU_AXI2HIF1_BASE;
++	int channels;
++	int i;
 +
-+    /* Trigger swctl for both channels */
-+    for (int i = 0; i < dual_channel; i++) {
-+        writel(0, SUNXI_DRAM_PHY0_BASE + (i * 0x400000) + 0xC80);
-+    }
-+    for (int i = 0; i < dual_channel; i++) {
-+        writel(0, SUNXI_DRAM_PHY0_BASE + (i * 0x400000) + 0x208); // rfshctl3
-+    }
-+    for (int i = 0; i < dual_channel; i++) {
-+        writel(1, SUNXI_DRAM_PHY0_BASE + (i * 0x400000) + 0xC80);
-+    }
-+    for (int i = 0; i < dual_channel; i++) {
-+        while ((readl(SUNXI_DRAM_PHY0_BASE + (i * 0x400000) + 0xC84) & 1) == 0);
-+    }
++	/* Use logic from the decompiler to determine the number of channels */
++	if (para->tpr13 & 0x40) {
++		channels = 2;
++	} else {
++		channels = 1;
++	}
 +
-+    if (dual_channel == 2) {
-+        writel(32770, nsi_base + 0x4818);
-+        writel(0xFFFFFFFF, nsi_base + 0x481C);
-+        writel(32770, 0x0A030018);
-+        writel(32770, 0x0A040018);
-+        writel(0xFFFFFFFF, 0x0A030068);
-+        writel(0xFFFFFFFF, 0x0A040068);
-+        writel(2, nsi_base + 0x4838);
-+        writel(2, nsi_base + 0x448C);
-+        writel(2, nsi_base + 0x468C);
-+    } else {
-+        writel(1, nsi_base + 0x44A8);
-+        writel(1, nsi_base + 0x46A8);
-+        writel(3, 0x0A030008);
-+        writel(3, 0x0A040008);
-+    }
++	/* Trigger swctl for all active channels */
++	for (i = 0; i < channels; i++) {
++		writel(0, (void *)(uintptr_t)(SUNXI_DRAM_PHY0_BASE + (i * 0x400000) + 0xC80));
++	}
++	for (i = 0; i < channels; i++) {
++		writel(0, (void *)(uintptr_t)(SUNXI_DRAM_PHY0_BASE + (i * 0x400000) + 0x208)); // rfshctl3
++	}
++	for (i = 0; i < channels; i++) {
++		writel(1, (void *)(uintptr_t)(SUNXI_DRAM_PHY0_BASE + (i * 0x400000) + 0xC80));
++	}
++	for (i = 0; i < channels; i++) {
++		while ((readl((void *)(uintptr_t)(SUNXI_DRAM_PHY0_BASE + (i * 0x400000) + 0xC84)) & 1) == 0);
++	}
++
++	if (channels == 2) {
++		writel(32770, nsi_base + 0x4818);
++		writel(0xFFFFFFFF, nsi_base + 0x481C);
++		
++		/* Replaced hard-coded addresses with macros */
++		writel(32770, axi_hif0 + 0x18);
++		writel(32770, axi_hif1 + 0x18);
++		writel(0xFFFFFFFF, axi_hif0 + 0x68);
++		writel(0xFFFFFFFF, axi_hif1 + 0x68);
++
++		writel(2, nsi_base + 0x4838);
++		writel(2, nsi_base + 0x448C);
++		writel(2, nsi_base + 0x468C);
++	} else {
++		writel(1, nsi_base + 0x44A8);
++		writel(1, nsi_base + 0x46A8);
++
++		/* Replaced hard-coded addresses with macros */
++		writel(3, axi_hif0 + 0x08);
++		writel(3, axi_hif1 + 0x08);
++	}
 +}
 +
 +/* * from IDA sub_25C6C
@@ -964,134 +1006,136 @@ index 00000000000..0935cfd20ff
 + */
 +bool mctl_core_init(const struct dram_para *para, const struct dram_config *config)
 +{
-+    void * const mctl_com = (void *)SUNXI_DRAM_COM_BASE;
-+    int dual_channel = 1;
++	void * const mctl_com = (void *)SUNXI_DRAM_COM_BASE;
++	int dual_channel = 1;
 +
-+    /* * Check FEX para + 120 (Offset 0x78) for bit 0x40
-+     * Assuming this maps to tpr13 in our struct based on the 8G/6G FEX values
-+     */
-+    if (para->tpr13 & 0x40) {
-+        dual_channel = 2;
-+    }
++	/* * Check FEX para + 120 (Offset 0x78) for bit 0x40
++	 * Assuming this maps to tpr13 in our struct based on the 8G/6G FEX values
++	 */
++	if (para->tpr13 & 0x40) {
++		dual_channel = 2;
++	}
 +
-+    u32 com_reg10 = readl(mctl_com + 0x10) & 0xFFFFC0C0;
-+    writel((dual_channel == 2) ? (com_reg10 | 0x2728) : (com_reg10 | 0x2208), mctl_com + 0x10);
++	u32 com_reg10 = readl(mctl_com + 0x10) & 0xFFFFC0C0;
++	writel((dual_channel == 2) ? (com_reg10 | 0x2728) : (com_reg10 | 0x2208), mctl_com + 0x10);
 +
-+    u32 com_reg14 = readl(mctl_com + 0x14) & 0xFFFFFFFC;
-+    if (dual_channel == 2) com_reg14 |= 2;
-+    if (para->type == 9) com_reg14 |= 1; // Enable LPDDR5
-+    writel(com_reg14, mctl_com + 0x14);
++	u32 com_reg14 = readl(mctl_com + 0x14) & 0xFFFFFFFC;
++	if (dual_channel == 2) com_reg14 |= 2;
++	if (para->type == 9) com_reg14 |= 1; // Enable LPDDR5
++	writel(com_reg14, mctl_com + 0x14);
 +
-+    writel(5119, mctl_com + 0x220);
-+    writel(5119, mctl_com + 0x228);
-+    writel(263, mctl_com + 0x21C);
-+    writel(263, mctl_com + 0x224);
++	writel(5119, mctl_com + 0x220);
++	writel(5119, mctl_com + 0x228);
++	writel(263, mctl_com + 0x21C);
++	writel(263, mctl_com + 0x224);
 +
-+    /* PRCM / CPUCFG Block */
-+    setbits_le32(0x07010250, 1);
++	/* PRCM / CPUCFG Block */
++	setbits_le32(0x07010250, 1);
 +
-+    /* Initialize Channel 0 */
-+    mctl_phy_lane_init(para, 0);
-+    if (para->type == 9) setbits_le32(SUNXI_DRAM_PHY0_BASE + 0xB84, 1);
-+    writel(2, SUNXI_DRAM_PHY0_BASE + 0x184);
-+    mctl_ctrl_init_channel(para, config, 0);
++	/* Initialize Channel 0 */
++	mctl_phy_lane_init(para, 0);
++	if (para->type == 9) setbits_le32(SUNXI_DRAM_PHY0_BASE + 0xB84, 1);
++	writel(2, SUNXI_DRAM_PHY0_BASE + 0x184);
++	mctl_ctrl_init_channel(para, config, 0);
 +
-+    /* Initialize Channel 1 (if enabled) */
-+    if (dual_channel == 2) {
-+        mctl_phy_lane_init(para, 1);
-+        if (para->type == 9) setbits_le32(SUNXI_DRAM_PHY1_BASE + 0xB84, 1);
-+        writel(2, SUNXI_DRAM_PHY1_BASE + 0x184);
-+        mctl_ctrl_init_channel(para, config, 1);
-+    }
++	/* Initialize Channel 1 (if enabled) */
++	if (dual_channel == 2) {
++		mctl_phy_lane_init(para, 1);
++		if (para->type == 9) setbits_le32(SUNXI_DRAM_PHY1_BASE + 0xB84, 1);
++		writel(2, SUNXI_DRAM_PHY1_BASE + 0x184);
++		mctl_ctrl_init_channel(para, config, 1);
++	}
 +
-+    u32 v9 = (readl(mctl_com + 0x10) & 0xFFFFFFEB) | ((dual_channel == 2) ? 0x14 : 4);
-+    writel((v9 & 0xFFFFFFFC) | 2, mctl_com + 0x10);
-+    udelay(1); // sub_21D80(1) usually maps to delay
-+    setbits_le32(mctl_com + 0x10, 3);
-+    udelay(1);
++	u32 v9 = (readl(mctl_com + 0x10) & 0xFFFFFFEB) | ((dual_channel == 2) ? 0x14 : 4);
++	writel((v9 & 0xFFFFFFFC) | 2, mctl_com + 0x10);
++	udelay(1); // sub_21D80(1) usually maps to delay
++	setbits_le32(mctl_com + 0x10, 3);
++	udelay(1);
 +
-+    /* Execute PHY Training (Placeholder for sub_25058) */
-+    // bool result = mctl_phy_training_main(para, config);
-+    bool result = true; // Assume success for this skeleton
++	/* Execute PHY Training (Placeholder for sub_25058) */
++	// bool result = mctl_phy_training_main(para, config);
++	bool result = true; // Assume success for this skeleton
 +
-+    if (result) {
-+        /* Optional: adjust clock or reset NSI based on training success */
-+        sunxi_post_training_and_nsi_init(para, dual_channel);
-+        return true;
-+    }
++	if (result) {
++		/* Optional: adjust clock or reset NSI based on training success */
++		sunxi_post_training_and_nsi_init(para);
++		return true;
++	}
 +
-+    return false;
++	return false;
 +}
 +
 +static const struct dram_para para = {
-+    .type = SUNXI_DRAM_TYPE_LPDDR5,
-+    .dram_clk = CONFIG_DRAM_CLK,
-+    .dx_odt = CONFIG_DRAM_SUNXI_DX_ODT,
-+    .dx_dri = CONFIG_DRAM_SUNXI_DX_DRI,
-+    .ca_dri = CONFIG_DRAM_SUNXI_CA_DRI,
-+    .para1  = 0xa10a,       /* Hardcoded from FEX: cxmt 6g ddr */
-+    .tpr0 = CONFIG_DRAM_SUNXI_TPR0,
-+    .tpr1 = CONFIG_DRAM_SUNXI_TPR1,
-+    .tpr6 = CONFIG_DRAM_SUNXI_TPR6,
-+    .tpr10 = CONFIG_DRAM_SUNXI_TPR10,
-+    .tpr11 = CONFIG_DRAM_SUNXI_TPR11,
-+    .tpr12 = CONFIG_DRAM_SUNXI_TPR12,
-+    .tpr13 = 0x10065,       /* Hardcoded from FEX: Controls dual-channel mode */
-+    .tpr14 = 0x0,
++	.type = SUNXI_DRAM_TYPE_LPDDR5,
++	.dram_clk = CONFIG_DRAM_CLK,
++	.dx_odt = CONFIG_DRAM_SUNXI_DX_ODT,
++	.dx_dri = CONFIG_DRAM_SUNXI_DX_DRI,
++	.ca_dri = CONFIG_DRAM_SUNXI_CA_DRI,
++	.para1  = 0xa10a,	   /* Hardcoded from FEX: cxmt 6g ddr */
++	.tpr0 = CONFIG_DRAM_SUNXI_TPR0,
++	.tpr1 = CONFIG_DRAM_SUNXI_TPR1,
++	.tpr6 = CONFIG_DRAM_SUNXI_TPR6,
++	.tpr10 = CONFIG_DRAM_SUNXI_TPR10,
++	.tpr11 = CONFIG_DRAM_SUNXI_TPR11,
++	.tpr12 = CONFIG_DRAM_SUNXI_TPR12,
++	.tpr13 = 0x10065,	   /* Hardcoded from FEX: Controls dual-channel mode */
++	.tpr14 = 0x0,
 +};
 +
 +unsigned long sunxi_dram_init(void)
 +{
-+    struct dram_config config;
-+    unsigned long size;
++	struct dram_config config;
++	unsigned long size;
 +
-+    config.clk = 360;
-+    
-+    switch (para.type) {
-+    case SUNXI_DRAM_TYPE_LPDDR4:
-+        config.odt_en = 0x84848484;
-+        config.tpr11 = 0x9a9a9a9a;
-+        config.tpr12 = 0x0e0f070a;
-+        config.tpr14 = 0x48484848;
-+        break;
-+    case SUNXI_DRAM_TYPE_LPDDR5:
-+        config.odt_en = 0x0;
-+        config.tpr11 = 0x0;
-+        config.tpr12 = 0x0;
-+        config.tpr14 = 0x0;
-+        break;
-+    default:
-+        panic("This DRAM setup is currently not supported.\n");
-+    };
++	mctl_sys_init(para.dram_clk);
 +
-+    setbits_le32(0x03000160, BIT(8));
-+    clrbits_le32(0x03000168, 0x3f);
++	config.clk = 360;
++	
++	switch (para.type) {
++	case SUNXI_DRAM_TYPE_LPDDR4:
++		config.odt_en = 0x84848484;
++		config.tpr11 = 0x9a9a9a9a;
++		config.tpr12 = 0x0e0f070a;
++		config.tpr14 = 0x48484848;
++		break;
++	case SUNXI_DRAM_TYPE_LPDDR5:
++		config.odt_en = 0x0;
++		config.tpr11 = 0x0;
++		config.tpr12 = 0x0;
++		config.tpr14 = 0x0;
++		break;
++	default:
++		panic("This DRAM setup is currently not supported.\n");
++	};
 +
-+    mctl_auto_detect_rank_width(&para, &config);
-+    mctl_auto_detect_dram_size(&para, &config);
++	setbits_le32(0x03000160, BIT(8));
++	clrbits_le32(0x03000168, 0x3f);
 +
-+    config.clk = CONFIG_DRAM_CLK;
++	mctl_auto_detect_rank_width(&para, &config);
++	mctl_auto_detect_dram_size(&para, &config);
++
++	config.clk = CONFIG_DRAM_CLK;
 +#ifdef CONFIG_DRAM_SUNXI_ODT_EN
-+    config.odt_en = CONFIG_DRAM_SUNXI_ODT_EN;
++	config.odt_en = CONFIG_DRAM_SUNXI_ODT_EN;
 +#endif
-+    config.tpr11 = CONFIG_DRAM_SUNXI_TPR11;
-+    config.tpr12 = CONFIG_DRAM_SUNXI_TPR12;
++	config.tpr11 = CONFIG_DRAM_SUNXI_TPR11;
++	config.tpr12 = CONFIG_DRAM_SUNXI_TPR12;
 +
-+    mctl_core_init(&para, &config);
++	mctl_core_init(&para, &config);
 +
-+    size = mctl_calc_size(&config);
++	size = mctl_calc_size(&config);
 +
-+    int dual_channel = (para.tpr13 & 0x40) ? 2 : 1;
-+    sunxi_post_training_and_nsi_init(&para, dual_channel);
++	int dual_channel = (para.tpr13 & 0x40) ? 2 : 1;
++	sunxi_post_training_and_nsi_init(&para);
 +
-+    return size;
++	return size;
 +}
 diff --git a/arch/arm/mach-sunxi/dram_timings/a733_lpddr5.c b/arch/arm/mach-sunxi/dram_timings/a733_lpddr5.c
 new file mode 100644
-index 00000000000..ddddbdbda2d
+index 000000000000..111111111111
 --- /dev/null
 +++ b/arch/arm/mach-sunxi/dram_timings/a733_lpddr5.c
-@@ -0,0 +1,120 @@
+@@ -0,0 +1,121 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
 + * sun60iw2 (A733/T527) LPDDR5 timings, as programmed by Allwinner's boot0
@@ -1102,118 +1146,119 @@ index 00000000000..ddddbdbda2d
 +#include <asm/arch/cpu.h>
 +#include <linux/bitops.h>
 +
-+#define SUNXI_DRAM_CTL0_BASE 0x0A100000
-+
 +void mctl_set_timing_params(const struct dram_config *config)
 +{
-+    void * const mctl_ctl = (void *)SUNXI_DRAM_CTL0_BASE;
++	void * const mctl_ctl = (void *)SUNXI_DRAM_CTL0_BASE;
 +
-+    /* * In boot0, DFI clock is clk / 4 for LPDDR5 calculation
-+     * (v12 = *a1 >> 2 in IDA)
-+     */
-+    u32 dfi_clk = config->clk / 4;
++	/* * In boot0, DFI clock is clk / 4 for LPDDR5 calculation
++	 * (v12 = *a1 >> 2 in IDA)
++	 */
++	u32 dfi_clk = config->clk / 4;
 +
-+    /* * flag: corresponds to MEMORY[0x66C18] in boot0.
-+     * This is a hardware/FEX specific switch (likely indicating CXMT die
-+     * or half-width mode). Set to false by default, patch if needed.
-+     */
-+    bool flag = false;
++	/* * flag: corresponds to MEMORY[0x66C18] in boot0.
++	 * This is a hardware/FEX specific switch (likely indicating CXMT die
++	 * or half-width mode). Set to false by default, patch if needed.
++	 */
++	bool flag = false;
 +
-+    /* Timing calculations (ns_to_t converts ns to ticks) */
-+    u8 tfaw      = max((u32)ns_to_t(40, dfi_clk), 8u);
-+    u8 t_20      = ns_to_t(20, dfi_clk);
-+    u8 t_5       = max((u32)ns_to_t(5, dfi_clk), 2u);
-+    u8 t_18      = max((u32)ns_to_t(18, dfi_clk), 2u);
-+    u8 t_7       = max((u32)ns_to_t(7, dfi_clk), 3u);
-+    u8 t_12_14   = ns_to_t(flag ? 14 : 12, dfi_clk);
-+    u8 t_8       = max((u32)ns_to_t(8, dfi_clk), 2u);
-+    u8 t_21      = max((u32)ns_to_t(21, dfi_clk), 2u);
-+    u8 t_42      = max((u32)ns_to_t(42, dfi_clk), 3u);
-+    u16 trefi    = ns_to_t(3906, dfi_clk);
-+    u16 trfc     = ns_to_t(380, dfi_clk);
-+    u16 t_260    = ns_to_t(260, dfi_clk);
-+    u16 t_90     = ns_to_t(90, dfi_clk);
-+    u8 t_3       = ns_to_t(3, dfi_clk);
-+    u8 t_15      = max((u32)ns_to_t(15, dfi_clk), 2u);
++	/* Timing calculations (ns_to_t converts ns to ticks) */
++	u8 tfaw	  = max((u32)ns_to_t(40, dfi_clk), 8u);
++	u8 t_20	  = ns_to_t(20, dfi_clk);
++	u8 t_5	   = max((u32)ns_to_t(5, dfi_clk), 2u);
++	u8 t_18	  = max((u32)ns_to_t(18, dfi_clk), 2u);
++	u8 t_7	   = max((u32)ns_to_t(7, dfi_clk), 3u);
++	u8 t_12_14   = ns_to_t(flag ? 14 : 12, dfi_clk);
++	u8 t_8	   = max((u32)ns_to_t(8, dfi_clk), 2u);
++	u8 t_21	  = max((u32)ns_to_t(21, dfi_clk), 2u);
++	u8 t_42	  = max((u32)ns_to_t(42, dfi_clk), 3u);
++	u16 trefi	= ns_to_t(3906, dfi_clk);
++	u16 trfc	 = ns_to_t(380, dfi_clk);
++	u16 t_260	= ns_to_t(260, dfi_clk);
++	u16 t_90	 = ns_to_t(90, dfi_clk);
++	u8 t_3	   = ns_to_t(3, dfi_clk);
++	u8 t_15	  = max((u32)ns_to_t(15, dfi_clk), 2u);
 +
-+    u32 t_200us  = ns_to_t(200000, dfi_clk);
-+    u32 ceil_200 = ((t_200us & 0x3FF) != 0) + (t_200us / 1024);
++	u32 t_200us  = ns_to_t(200000, dfi_clk);
++	u32 ceil_200 = ((t_200us & 0x3FF) != 0) + (t_200us / 1024);
++	u32 trasmax  = 9 * (trefi / 32);
 +
-+    u32 trasmax  = 9 * (trefi / 32);
++	u8 v58 = max((u32)t_12_14, 4u);
++	u8 v62 = flag ? t_8 + 2 : t_8;
++	u8 v80 = t_21 + t_42;
++	u8 v55 = trfc + t_8;
++	u8 v88 = t_5 + 1;
++	u8 v72 = ns_to_t(10, dfi_clk) + 1;
++	u8 v90 = flag ? 8 : 16;
++	u8 v87 = max((u32)t_5, 3u);
++	u8 v86 = trasmax / 32;
++	u8 v5  = flag ? 10 : 12;
++	u8 v76 = v58 + (flag ? 9 : 11);
++	u8 v89 = max((u32)t_7, 4u) + 9;
++	u8 v92 = flag ? 16 : 18;
 +
-+    /* Derived timing variables based on IDA flow */
-+    u8 v58 = max((u32)t_12_14, 4u);
-+    u8 v62 = flag ? t_8 + 2 : t_8;
-+    u8 v80 = t_21 + t_42;
-+    u8 v55 = trfc + t_8;
-+    u8 v88 = t_5 + 1;
-+    u8 v72 = ns_to_t(10, dfi_clk) + 1;
-+    u8 v90 = flag ? 8 : 16;
-+    u8 v87 = max((u32)t_5, 3u);
-+    u8 v86 = trasmax / 32;
-+    u8 v5  = flag ? 10 : 12;
-+    u8 v76 = v58 + (flag ? 9 : 11);
-+    u8 v89 = max((u32)t_7, 4u) + 9;
-+    u8 v92 = flag ? 16 : 18;
++	u8 v52 = max((u32)t_8, 4u);
++	u8 v53 = v52 + 13 + v62;
++	u32 v11 = flag ? v52 + 30 : v52 + 32;
++	u32 v71 = flag ? v53 + 4 : v53 + 6;
 +
-+    u8 v52 = max((u32)t_8, 4u);
-+    u8 v53 = v52 + 13 + v62;
-+    u32 v11 = flag ? v52 + 30 : v52 + 32;
-+    u32 v71 = flag ? v53 + 4 : v53 + 6;
++	/* Hardcoded LPDDR5 state machine constants */
++	u32 v66 = 31, v63 = 10, v77 = 10, v67 = 2, v70 = 7;
++	u32 v57 = 3,  v59 = 47, v69 = 3,  v64 = v5, v8 = 13;
++	
++	u32 v10 = 23 | (flag ? 0x180000 : 0);
++	u32 v68 = 5;
 +
-+    /* Hardcoded LPDDR5 state machine constants */
-+    u32 v66 = 31, v63 = 10, v77 = 10, v67 = 2, v70 = 7;
-+    u32 v57 = 3,  v59 = 47, v69 = 3,  v64 = v5, v8 = 13;
-+    u32 v10 = 23, v68 = 5;
++	/* 1. MCTL DRAM Timing Registers (dramtmg0 - dramtmg14) */
++	writel((t_20 << 16) | (v66 << 24) | t_42 | (v86 << 8), mctl_ctl + 0x00);
++	writel((v62 << 8) | (t_7 << 16) | v80, mctl_ctl + 0x04);
++	writel((v8 << 16) | (v70 << 24) | v76 | (v5 << 8), mctl_ctl + 0x08);
++	writel((v11 | 0xA0000) | (v71 << 8), mctl_ctl + 0x0C);
++	
++	writel(((flag ? 2u : 4u) << 16) | (t_18 << 24) | t_21 | (t_5 << 8), mctl_ctl + 0x10); 
++	
++	writel((v87 << 16) | (v67 << 24) | v72 | (t_15 << 8), mctl_ctl + 0x14);
++	writel(t_7 + 2, mctl_ctl + 0x18);
++	writel(t_3, mctl_ctl + 0x1C);
++	writel(v89 | 0x20000 | (v88 << 8), mctl_ctl + 0x24);
++	writel(196608, mctl_ctl + 0x30);
++	writel((v90 << 16) | (v63 << 24) | v67, mctl_ctl + 0x34);
++	writel(v55 | (tfaw << 16), mctl_ctl + 0x38);
++	writel(v72 | (ceil_200 << 16), mctl_ctl + 0x5C);
++	writel((v92 << 8) | (v77 << 16) | v64, mctl_ctl + 0x60);
 +
-+    /* 1. MCTL DRAM Timing Registers (dramtmg0 - dramtmg14) */
-+    writel((t_20 << 16) | (v66 << 24) | t_42 | (v86 << 8), mctl_ctl + 0x00);
-+    writel((v62 << 8) | (t_7 << 16) | v80, mctl_ctl + 0x04);
-+    writel((v8 << 16) | (v70 << 24) | v76 | (v5 << 8), mctl_ctl + 0x08);
-+    writel((v11 | 0xA0000) | (v71 << 8), mctl_ctl + 0x0C);
-+    writel((2 << 16) | (t_18 << 24) | t_21 | (t_5 << 8), mctl_ctl + 0x10);
-+    writel((v87 << 16) | (v67 << 24) | v72 | (t_15 << 8), mctl_ctl + 0x14);
-+    writel(t_7 + 2, mctl_ctl + 0x18);
-+    writel(t_3, mctl_ctl + 0x1C);
-+    writel(v89 | 0x20000 | (v88 << 8), mctl_ctl + 0x24);
-+    writel(196608, mctl_ctl + 0x30);
-+    writel((v90 << 16) | (v63 << 24) | v67, mctl_ctl + 0x34);
-+    writel(v55 | (tfaw << 16), mctl_ctl + 0x38);
-+    writel(v72 | (ceil_200 << 16), mctl_ctl + 0x5C);
-+    writel((v92 << 8) | (v77 << 16) | v64, mctl_ctl + 0x60);
++	/* 2. Hardware / Misc Config */
++	writel((v59 << 16) | (flag ? 0x3000200 : 0x2000200) | v10, mctl_ctl + 0x580);
++	writel(459523, mctl_ctl + 0x584); 
++	writel(v10 | (v59 << 8), mctl_ctl + 0x588); 
++	
++	writel(((v69 - 1) << 18) | ((v68 - 1) << 26) | 0x11, mctl_ctl + 0x590);
++	writel((v57 << 18) | 0x400000F, mctl_ctl + 0x594);
 +
-+    /* 2. Hardware / Misc Config */
-+    writel(0x02000200 | v10 | 0x180000, mctl_ctl + 0x580);
-+    writel(459523, mctl_ctl + 0x584); // 0x070303
-+    writel(v10 | 0x180000 | (v59 << 8), mctl_ctl + 0x588);
-+    writel(((v69 - 1) << 18) | ((v68 - 1) << 26) | 0x11, mctl_ctl + 0x590);
-+    writel((v57 << 18) | 0x400000F, mctl_ctl + 0x594);
++	/* 3. LPDDR5 Specific Init Blocks */
++	writel(131586, mctl_ctl + 0x5A0);
++	writel(513, mctl_ctl + 0x5A4);
++	writel(1835011, mctl_ctl + 0x5A8);
++	writel(5767328, mctl_ctl + 0x5AC);
++	writel(151, mctl_ctl + 0x5B0);
++	writel(327, mctl_ctl + 0x5B8);
 +
-+    /* 3. LPDDR5 Specific Init Blocks */
-+    writel(131586, mctl_ctl + 0x5A0);
-+    writel(513, mctl_ctl + 0x5A4);
-+    writel(1835011, mctl_ctl + 0x5A8);
-+    writel(5767328, mctl_ctl + 0x5AC);
-+    writel(151, mctl_ctl + 0x5B0);
-+    writel(327, mctl_ctl + 0x5B8);
++	/* 4. Refresh & ZQ Registers */
++	clrsetbits_le32(mctl_ctl + 0x600, 0x8000FFFF, (trefi / 32));
++	clrsetbits_le32(mctl_ctl + 0x604, 0x0FFF0FFF, trfc | (trfc << 16));
++	clrsetbits_le32(mctl_ctl + 0x608, 0xFFFF0000, (t_90 << 16) | (t_8 << 24));
++	clrsetbits_le32(mctl_ctl + 0x650, 0x00000FFF, t_260);
 +
-+    /* 4. Refresh & ZQ Registers */
-+    clrsetbits_le32(mctl_ctl + 0x600, 0x7FFF0000, (trefi / 32));
-+    clrsetbits_le32(mctl_ctl + 0x604, 0xF000F000, trfc | (trfc << 16));
-+    clrsetbits_le32(mctl_ctl + 0x608, 0xFFFF, (t_90 << 16) | (t_8 << 24));
-+    clrsetbits_le32(mctl_ctl + 0x650, 0xFFFFF000, t_260);
-+
-+    /* 5. DFI / Internal PHY setup */
-+    writel(1574102, mctl_ctl + 0x800);
-+    writel(41943127, mctl_ctl + 0x804);
-+    writel(8052, mctl_ctl + 0xA80);
-+    writel(130073570, mctl_ctl + 0xB00);
-+    writel(270798858, mctl_ctl + 0xB04);
-+    writel(51, mctl_ctl + 0xB08);
-+    writel(1507328, mctl_ctl + 0xB80);
++	/* 5. DFI / Internal PHY setup */
++	writel(1574102, mctl_ctl + 0x800);
++	writel(41943127, mctl_ctl + 0x804);
++	writel(8052, mctl_ctl + 0xA80);
++	writel(130073570, mctl_ctl + 0xB00);
++	writel(270798858, mctl_ctl + 0xB04);
++	writel(51, mctl_ctl + 0xB08);
++	writel(1507328, mctl_ctl + 0xB80);
 +}
 diff --git a/arch/arm/include/asm/arch-sunxi/dram.h b/arch/arm/include/asm/arch-sunxi/dram.h
-index 0eccb1e6c28..64410b4e34b 100644
+index 111111111111..222222222222 100644
 --- a/arch/arm/include/asm/arch-sunxi/dram.h
 +++ b/arch/arm/include/asm/arch-sunxi/dram.h
 @@ -35,10 +35,12 @@
@@ -1231,10 +1276,10 @@ index 0eccb1e6c28..64410b4e34b 100644
  unsigned long sunxi_dram_init(void);
 diff --git a/arch/arm/include/asm/arch-sunxi/dram_sun60i_a733.h b/arch/arm/include/asm/arch-sunxi/dram_sun60i_a733.h
 new file mode 100644
-index 00000000000..5fba858761e
+index 000000000000..111111111111
 --- /dev/null
 +++ b/arch/arm/include/asm/arch-sunxi/dram_sun60i_a733.h
-@@ -0,0 +1,99 @@
+@@ -0,0 +1,105 @@
 +/* SPDX-License-Identifier: GPL-2.0+ */
 +/*
 + * sun60iw2 (A733/T527) DRAM controller register and constant defines
@@ -1249,76 +1294,82 @@ index 00000000000..5fba858761e
 +
 +/* LPDDR5 DRAM Type Constant from boot0 FEX */
 +enum sunxi_dram_type {
-+    SUNXI_DRAM_TYPE_DDR3 = 3,
-+    SUNXI_DRAM_TYPE_DDR4 = 4,
-+    SUNXI_DRAM_TYPE_LPDDR3 = 7,
-+    SUNXI_DRAM_TYPE_LPDDR4 = 8,
-+    SUNXI_DRAM_TYPE_LPDDR5 = 9,
++	SUNXI_DRAM_TYPE_DDR3 = 3,
++	SUNXI_DRAM_TYPE_DDR4 = 4,
++	SUNXI_DRAM_TYPE_LPDDR3 = 7,
++	SUNXI_DRAM_TYPE_LPDDR4 = 8,
++	SUNXI_DRAM_TYPE_LPDDR5 = 9,
 +};
++
++/*
++ * Memory Map
++ */
++#define SUNXI_CPU_AXI2HIF0_BASE 0x0A030000
++#define SUNXI_CPU_AXI2HIF1_BASE 0x0A040000
++#define SUNXI_NSI_BASE		  0x02020000
 +
 +/* * Base Addresses for sun60iw2
 + * Synopsys DW uMCTL2 architecture splits COM, CTL, PHY, and Mailbox SRAM
 + */
-+#define SUNXI_DRAM_COM_BASE     0x0A020000
-+#define SUNXI_DRAM_CTL0_BASE    0x0A100000
-+#define SUNXI_DRAM_PHY0_BASE    0x0A110000
-+#define SUNXI_DRAM_CTL1_BASE    0x0A500000
-+#define SUNXI_DRAM_PHY1_BASE    0x0A510000
-+#define SUNXI_DRAM_SRAM_BASE    0x0A900000
++#define SUNXI_DRAM_COM_BASE	 0x0A020000
++#define SUNXI_DRAM_CTL0_BASE	0x0A100000 //DRAM Controller0
++#define SUNXI_DRAM_PHY0_BASE	0x0A110000
++#define SUNXI_DRAM_CTL1_BASE	0x0A500000 //DRAM Controller1
++#define SUNXI_DRAM_PHY1_BASE	0x0A510000
 +
-+#define SUNXI_NSI_BASE          0x02020000
++#define SUNXI_NSI_BASE		  0x02020000
 +
 +/*
 + * Exact reconstruction of the FEX dram_para structure.
 + * Mapped from boot0 parameter offsets (e.g. a1 + 120 == tpr13)
 + */
 +struct dram_para {
-+    u32 dram_clk;       /* 0x00 */
-+    u32 type;           /* 0x04 */
-+    u32 dx_odt;         /* 0x08 */
-+    u32 dx_dri;         /* 0x0c */
-+    u32 ca_dri;         /* 0x10 */
-+    u32 para0;          /* 0x14 */
-+    u32 para1;          /* 0x18 */
-+    u32 para2;          /* 0x1c */
-+    u32 mr0;            /* 0x20 */
-+    u32 mr1;            /* 0x24 */
-+    u32 mr2;            /* 0x28 */
-+    u32 mr3;            /* 0x2c */
-+    u32 mr4;            /* 0x30 */
-+    u32 mr5;            /* 0x34 */
-+    u32 mr6;            /* 0x38 */
-+    u32 mr11;           /* 0x3c */
-+    u32 mr12;           /* 0x40 */
-+    u32 mr13;           /* 0x44 */
-+    u32 mr14;           /* 0x48 */
-+    u32 mr16;           /* 0x4c */
-+    u32 mr17;           /* 0x50 */
-+    u32 mr22;           /* 0x54 */
-+    u32 tpr0;           /* 0x58 */
-+    u32 tpr1;           /* 0x5c */
-+    u32 tpr2;           /* 0x60 */
-+    u32 tpr3;           /* 0x64 */
-+    u32 tpr6;           /* 0x68 */
-+    u32 tpr10;          /* 0x6c */
-+    u32 tpr11;          /* 0x70 */
-+    u32 tpr12;          /* 0x74 */
-+    u32 tpr13;          /* 0x78 (120 dezimal - Dual Channel Bit 0x40) */
-+    u32 tpr14;          /* 0x7c */
++	u32 dram_clk;	   /* 0x00 */
++	u32 type;		   /* 0x04 */
++	u32 dx_odt;		 /* 0x08 */
++	u32 dx_dri;		 /* 0x0c */
++	u32 ca_dri;		 /* 0x10 */
++	u32 para0;		  /* 0x14 */
++	u32 para1;		  /* 0x18 */
++	u32 para2;		  /* 0x1c */
++	u32 mr0;			/* 0x20 */
++	u32 mr1;			/* 0x24 */
++	u32 mr2;			/* 0x28 */
++	u32 mr3;			/* 0x2c */
++	u32 mr4;			/* 0x30 */
++	u32 mr5;			/* 0x34 */
++	u32 mr6;			/* 0x38 */
++	u32 mr11;		   /* 0x3c */
++	u32 mr12;		   /* 0x40 */
++	u32 mr13;		   /* 0x44 */
++	u32 mr14;		   /* 0x48 */
++	u32 mr16;		   /* 0x4c */
++	u32 mr17;		   /* 0x50 */
++	u32 mr22;		   /* 0x54 */
++	u32 tpr0;		   /* 0x58 */
++	u32 tpr1;		   /* 0x5c */
++	u32 tpr2;		   /* 0x60 */
++	u32 tpr3;		   /* 0x64 */
++	u32 tpr6;		   /* 0x68 */
++	u32 tpr10;		  /* 0x6c */
++	u32 tpr11;		  /* 0x70 */
++	u32 tpr12;		  /* 0x74 */
++	u32 tpr13;		  /* 0x78 (120 dezimal - Dual Channel Bit 0x40) */
++	u32 tpr14;		  /* 0x7c */
 +};
 +
 +/* * Configuration struct used internally by the driver
 + */
 +struct dram_config {
-+    u8 cols;
-+    u8 rows;
-+    u8 ranks;
-+    u8 bus_full_width;
-+    u32 clk;
-+    u32 odt_en;
-+    u32 tpr11;
-+    u32 tpr12;
-+    u32 tpr14;
++	u8 cols;
++	u8 rows;
++	u8 ranks;
++	u8 bus_full_width;
++	u32 clk;
++	u32 odt_en;
++	u32 tpr11;
++	u32 tpr12;
++	u32 tpr14;
 +};
 +
 +/* * Helper function to convert JEDEC nanosecond timings into clock cycles.
@@ -1326,8 +1377,8 @@ index 00000000000..5fba858761e
 + */
 +static inline int ns_to_t(int nanoseconds, u32 dfi_clk)
 +{
-+    /* dfi_clk is typically passed as config->clk / 4 */
-+    return DIV_ROUND_UP(dfi_clk * nanoseconds, 1000);
++	/* dfi_clk is typically passed as config->clk / 4 */
++	return DIV_ROUND_UP(dfi_clk * nanoseconds, 1000);
 +}
 +
 +void mctl_set_timing_params(const struct dram_config *config);

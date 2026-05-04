@@ -1,11 +1,9 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: John Doe <john.doe@somewhere.on.planet>
+From: Marvin Wewer <mwewer37@proton.me>
 Date: Thu, 26 Mar 2026 16:36:12 +0100
-Subject: Patching kernel sun60iw2 files drivers/mfd/axp20x-i2c.c
- drivers/mfd/axp20x.c drivers/mfd/axp2101-i2c.c drivers/mfd/axp2101.c
- drivers/regulator/axp20x-regulator.c include/linux/mfd/axp20x.h
+Subject: power: axp8191: Add support for AXP8191 PMIC
 
-Signed-off-by: John Doe <john.doe@somewhere.on.planet>
+Signed-off-by: Marvin Wewer <mwewer37@proton.me>
 ---
  drivers/mfd/axp20x-i2c.c             |    1 +
  drivers/mfd/axp20x.c                 |  147 +
@@ -16,7 +14,7 @@ Signed-off-by: John Doe <john.doe@somewhere.on.planet>
  6 files changed, 4934 insertions(+)
 
 diff --git a/drivers/mfd/axp20x-i2c.c b/drivers/mfd/axp20x-i2c.c
-index 5c93136f977e..8364b9b82614 100644
+index 111111111111..222222222222 100644
 --- a/drivers/mfd/axp20x-i2c.c
 +++ b/drivers/mfd/axp20x-i2c.c
 @@ -67,10 +67,11 @@ static const struct of_device_id axp20x_i2c_of_match[] = {
@@ -32,7 +30,7 @@ index 5c93136f977e..8364b9b82614 100644
  MODULE_DEVICE_TABLE(of, axp20x_i2c_of_match);
  #endif
 diff --git a/drivers/mfd/axp20x.c b/drivers/mfd/axp20x.c
-index 679364189ea5..a67e9360fd42 100644
+index 111111111111..222222222222 100644
 --- a/drivers/mfd/axp20x.c
 +++ b/drivers/mfd/axp20x.c
 @@ -46,10 +46,11 @@ static const char * const axp20x_model_names[] = {
@@ -272,7 +270,7 @@ index 679364189ea5..a67e9360fd42 100644
  
 diff --git a/drivers/mfd/axp2101-i2c.c b/drivers/mfd/axp2101-i2c.c
 new file mode 100644
-index 000000000000..3b546fb9558e
+index 000000000000..111111111111
 --- /dev/null
 +++ b/drivers/mfd/axp2101-i2c.c
 @@ -0,0 +1,150 @@
@@ -428,7 +426,7 @@ index 000000000000..3b546fb9558e
 +MODULE_VERSION("1.0.0");
 diff --git a/drivers/mfd/axp2101.c b/drivers/mfd/axp2101.c
 new file mode 100644
-index 000000000000..a3c12a5b153a
+index 000000000000..111111111111
 --- /dev/null
 +++ b/drivers/mfd/axp2101.c
 @@ -0,0 +1,4221 @@
@@ -4654,7 +4652,7 @@ index 000000000000..a3c12a5b153a
 +MODULE_LICENSE("GPL");
 +MODULE_VERSION("1.0.3");
 diff --git a/drivers/regulator/axp20x-regulator.c b/drivers/regulator/axp20x-regulator.c
-index da891415efc0..792fb62dcab4 100644
+index 111111111111..222222222222 100644
 --- a/drivers/regulator/axp20x-regulator.c
 +++ b/drivers/regulator/axp20x-regulator.c
 @@ -1207,10 +1207,169 @@ static const struct regulator_desc axp813_regulators[] = {
@@ -4843,7 +4841,7 @@ index da891415efc0..792fb62dcab4 100644
  		break;
  	default:
 diff --git a/include/linux/mfd/axp20x.h b/include/linux/mfd/axp20x.h
-index b352661d99a1..6184e0e1cee3 100644
+index 111111111111..222222222222 100644
 --- a/include/linux/mfd/axp20x.h
 +++ b/include/linux/mfd/axp20x.h
 @@ -23,10 +23,11 @@ enum axp20x_variants {

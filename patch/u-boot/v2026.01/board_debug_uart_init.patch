@@ -1,0 +1,57 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Marvin Wewer <mwewer37@proton.me>
+Date: Fri, 17 Apr 2026 12:38:56 +0000
+Subject: U-Boot: Add early debug UART initialization for SUN60I A733 and SUN55I A523
+
+Signed-off-by: Marvin Wewer <mwewer37@proton.me>
+---
+ arch/arm/mach-sunxi/board.c | 29 ++++++++++
+ 1 file changed, 29 insertions(+)
+
+diff --git a/arch/arm/mach-sunxi/board.c b/arch/arm/mach-sunxi/board.c
+index 111111111111..222222222222 100644
+--- a/arch/arm/mach-sunxi/board.c
++++ b/arch/arm/mach-sunxi/board.c
+@@ -494,10 +494,39 @@ void board_init_f(ulong dummy)
+ #endif
+ 	sunxi_board_init();
+ }
+ #endif /* CONFIG_XPL_BUILD */
+ 
++#ifdef CONFIG_DEBUG_UART_BOARD_INIT
++void board_debug_uart_init(void)
++{
++	/* * The debug UART requires the GPIO pins to be set up very early.
++	 * We reuse the logic from gpio_init() to set up the correct pins
++	 * depending on the configured console index and SoC.
++	 */
++#if CONFIG_CONS_INDEX == 1 && defined(CONFIG_MACH_SUN60I_A733)
++	sunxi_gpio_set_cfgpin(SUNXI_GPB(9), 2);
++	sunxi_gpio_set_cfgpin(SUNXI_GPB(10), 2);
++	sunxi_gpio_set_pull(SUNXI_GPB(10), SUNXI_GPIO_PULL_UP);
++#elif CONFIG_CONS_INDEX == 1 && defined(CONFIG_MACH_SUN55I_A523)
++	sunxi_gpio_set_cfgpin(SUNXI_GPB(9), 2);
++	sunxi_gpio_set_cfgpin(SUNXI_GPB(10), 2);
++	sunxi_gpio_set_pull(SUNXI_GPB(10), SUNXI_GPIO_PULL_UP);
++#elif CONFIG_CONS_INDEX == 1 && defined(CONFIG_MACH_SUN50I_H616)
++	sunxi_gpio_set_cfgpin(SUNXI_GPH(0), SUN50I_H616_GPH_UART0);
++	sunxi_gpio_set_cfgpin(SUNXI_GPH(1), SUN50I_H616_GPH_UART0);
++	sunxi_gpio_set_pull(SUNXI_GPH(1), SUNXI_GPIO_PULL_UP);
++#elif CONFIG_CONS_INDEX == 1 && defined(CONFIG_MACH_SUN50I)
++	sunxi_gpio_set_cfgpin(SUNXI_GPB(8), SUN50I_GPB_UART0);
++	sunxi_gpio_set_cfgpin(SUNXI_GPB(9), SUN50I_GPB_UART0);
++	sunxi_gpio_set_pull(SUNXI_GPB(9), SUNXI_GPIO_PULL_UP);
++#else
++	/* For other boards, rely on gpio_init() later in the boot process */
++#endif
++}
++#endif
++
+ #if !CONFIG_IS_ENABLED(SYSRESET)
+ void reset_cpu(void)
+ {
+ #if defined(CONFIG_SUNXI_GEN_SUN4I) || defined(CONFIG_MACH_SUN8I_R40)
+ 	static const struct sunxi_wdog *wdog =
+-- 
+Created with Armbian build tools https://github.com/armbian/build
+

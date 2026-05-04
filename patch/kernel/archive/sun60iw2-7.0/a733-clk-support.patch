@@ -1,41 +1,29 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: John Doe <john.doe@somewhere.on.planet>
+From: Marvin Wewer <mwewer37@proton.me>
 Date: Thu, 26 Mar 2026 14:04:38 +0100
-Subject: Patching kernel sun60iw2 files drivers/clk/sunxi-ng/Kconfig
- drivers/clk/sunxi-ng/Makefile drivers/clk/sunxi-ng/ccu-sun60i-a733-cpupll.c
- drivers/clk/sunxi-ng/ccu-sun60i-a733-r.c drivers/clk/sunxi-ng/ccu-sun60i-a733-r.h
- drivers/clk/sunxi-ng/ccu-sun60i-a733-rtc.c
- drivers/clk/sunxi-ng/ccu-sun60i-a733-rtc.h drivers/clk/sunxi-ng/ccu-sun60i-a733.c
- drivers/clk/sunxi-ng/ccu-sun60i-a733.h
- include/dt-bindings/clock/sun60i-a733-ccu.h
- include/dt-bindings/clock/sun60i-a733-cpupll-ccu.h
- include/dt-bindings/clock/sun60i-a733-r-ccu.h
- include/dt-bindings/clock/sun60i-a733-rtc.h
- include/dt-bindings/reset/sun60i-a733-ccu.h
- include/dt-bindings/reset/sun60i-a733-r-ccu.h
- 
+Subject: clk: sunxi-ng: Add support for the Allwinner A733 CCU
 
-Signed-off-by: John Doe <john.doe@somewhere.on.planet>
+Signed-off-by: Marvin Wewer <mwewer37@proton.me>
 ---
- drivers/clk/sunxi-ng/Kconfig               |   10 +
- drivers/clk/sunxi-ng/Makefile              |    6 +
- drivers/clk/sunxi-ng/ccu-sun60i-a733-cpupll.c |  351 ++
- drivers/clk/sunxi-ng/ccu-sun60i-a733-r.c      |  397 ++
- drivers/clk/sunxi-ng/ccu-sun60i-a733-r.h      |   13 +
- drivers/clk/sunxi-ng/ccu-sun60i-a733-rtc.c    |  257 +
- drivers/clk/sunxi-ng/ccu-sun60i-a733-rtc.h    |   21 +
- drivers/clk/sunxi-ng/ccu-sun60i-a733.c        | 2949 ++++++++++
- drivers/clk/sunxi-ng/ccu-sun60i-a733.h        |   19 +
- include/dt-bindings/clock/sun60i-a733-ccu.h        | 336 ++++++++++
- include/dt-bindings/clock/sun60i-a733-cpupll-ccu.h |  18 +
- include/dt-bindings/clock/sun60i-a733-r-ccu.h      |  49 ++
- include/dt-bindings/clock/sun60i-a733-rtc.h        |  26 +
- include/dt-bindings/reset/sun60i-a733-ccu.h   | 131 ++++++++++
- include/dt-bindings/reset/sun60i-a733-r-ccu.h |  25 ++
+ drivers/clk/sunxi-ng/Kconfig               	    |   10 +
+ drivers/clk/sunxi-ng/Makefile              	    |    6 +
+ drivers/clk/sunxi-ng/ccu-sun60i-a733-cpupll.c 	    |  351 ++
+ drivers/clk/sunxi-ng/ccu-sun60i-a733-r.c      	    |  397 ++
+ drivers/clk/sunxi-ng/ccu-sun60i-a733-r.h      	    |   13 +
+ drivers/clk/sunxi-ng/ccu-sun60i-a733-rtc.c    	    |  257 +
+ drivers/clk/sunxi-ng/ccu-sun60i-a733-rtc.h    	    |   21 +
+ drivers/clk/sunxi-ng/ccu-sun60i-a733.c        	    | 2949 ++++++++++
+ drivers/clk/sunxi-ng/ccu-sun60i-a733.h        	    |   19 +
+ include/dt-bindings/clock/sun60i-a733-ccu.h        |  336 ++++++++++
+ include/dt-bindings/clock/sun60i-a733-cpupll-ccu.h |   18 +
+ include/dt-bindings/clock/sun60i-a733-r-ccu.h      |   49 ++
+ include/dt-bindings/clock/sun60i-a733-rtc.h        |   26 +
+ include/dt-bindings/reset/sun60i-a733-ccu.h   	    |  131 ++++++++++
+ include/dt-bindings/reset/sun60i-a733-r-ccu.h 	    |   25 ++
  15 files changed, 4608 insertions(+)
 
 diff --git a/drivers/clk/sunxi-ng/Kconfig b/drivers/clk/sunxi-ng/Kconfig
-index 6af2d020e03e..cffa83056934 100644
+index 111111111111..222222222222 100644
 --- a/drivers/clk/sunxi-ng/Kconfig
 +++ b/drivers/clk/sunxi-ng/Kconfig
 @@ -65,10 +65,20 @@ config SUN55I_A523_MCU_CCU
@@ -60,7 +48,7 @@ index 6af2d020e03e..cffa83056934 100644
  	depends on MACH_SUN4I || MACH_SUN7I || COMPILE_TEST
  
 diff --git a/drivers/clk/sunxi-ng/Makefile b/drivers/clk/sunxi-ng/Makefile
-index a1c4087d7241..ec6302e8bdc4 100644
+index 111111111111..222222222222 100644
 --- a/drivers/clk/sunxi-ng/Makefile
 +++ b/drivers/clk/sunxi-ng/Makefile
 @@ -49,10 +49,12 @@ obj-$(CONFIG_SUN8I_V3S_CCU)	+= sun8i-v3s-ccu.o
@@ -88,7 +76,7 @@ index a1c4087d7241..ec6302e8bdc4 100644
 +sun60i-a733-r-ccu-y		+= ccu-sun60i-a733-r.o
 diff --git a/drivers/clk/sunxi-ng/ccu-sun60i-a733-cpupll.c b/drivers/clk/sunxi-ng/ccu-sun60i-a733-cpupll.c
 new file mode 100644
-index 000000000000..f896081166d4
+index 000000000000..111111111111
 --- /dev/null
 +++ b/drivers/clk/sunxi-ng/ccu-sun60i-a733-cpupll.c
 @@ -0,0 +1,351 @@
@@ -445,7 +433,7 @@ index 000000000000..f896081166d4
 +MODULE_AUTHOR("emma<liujuan1@allwinnertech.com>");
 diff --git a/drivers/clk/sunxi-ng/ccu-sun60i-a733-r.c b/drivers/clk/sunxi-ng/ccu-sun60i-a733-r.c
 new file mode 100644
-index 000000000000..ccfe9df300d7
+index 000000000000..111111111111
 --- /dev/null
 +++ b/drivers/clk/sunxi-ng/ccu-sun60i-a733-r.c
 @@ -0,0 +1,397 @@
@@ -848,7 +836,7 @@ index 000000000000..ccfe9df300d7
 +MODULE_VERSION(SUNXI_R_CCU_VERSION);
 diff --git a/drivers/clk/sunxi-ng/ccu-sun60i-a733-r.h b/drivers/clk/sunxi-ng/ccu-sun60i-a733-r.h
 new file mode 100644
-index 000000000000..0aaee8d1255e
+index 000000000000..111111111111
 --- /dev/null
 +++ b/drivers/clk/sunxi-ng/ccu-sun60i-a733-r.h
 @@ -0,0 +1,13 @@
@@ -867,7 +855,7 @@ index 000000000000..0aaee8d1255e
 +#endif /* _CCU_SUN60IW2_R_H */
 diff --git a/drivers/clk/sunxi-ng/ccu-sun60i-a733-rtc.c b/drivers/clk/sunxi-ng/ccu-sun60i-a733-rtc.c
 new file mode 100644
-index 000000000000..b0d10bebafa5
+index 000000000000..111111111111
 --- /dev/null
 +++ b/drivers/clk/sunxi-ng/ccu-sun60i-a733-rtc.c
 @@ -0,0 +1,257 @@
@@ -1130,7 +1118,7 @@ index 000000000000..b0d10bebafa5
 +MODULE_VERSION(SUNXI_RTC_CCU_VERSION);
 diff --git a/drivers/clk/sunxi-ng/ccu-sun60i-a733-rtc.h b/drivers/clk/sunxi-ng/ccu-sun60i-a733-rtc.h
 new file mode 100644
-index 000000000000..5f1a003dfb85
+index 000000000000..111111111111
 --- /dev/null
 +++ b/drivers/clk/sunxi-ng/ccu-sun60i-a733-rtc.h
 @@ -0,0 +1,21 @@
@@ -1157,7 +1145,7 @@ index 000000000000..5f1a003dfb85
 +#endif /* _CCU_SUN60IW2_RTC_H_ */
 diff --git a/drivers/clk/sunxi-ng/ccu-sun60i-a733.c b/drivers/clk/sunxi-ng/ccu-sun60i-a733.c
 new file mode 100644
-index 000000000000..bea88e2ce2f5
+index 000000000000..111111111111
 --- /dev/null
 +++ b/drivers/clk/sunxi-ng/ccu-sun60i-a733.c
 @@ -0,0 +1,2949 @@
@@ -4112,7 +4100,7 @@ index 000000000000..bea88e2ce2f5
 +MODULE_VERSION(SUNXI_CCU_VERSION);
 diff --git a/drivers/clk/sunxi-ng/ccu-sun60i-a733.h b/drivers/clk/sunxi-ng/ccu-sun60i-a733.h
 new file mode 100644
-index 000000000000..7a7b1b450f3e
+index 000000000000..111111111111
 --- /dev/null
 +++ b/drivers/clk/sunxi-ng/ccu-sun60i-a733.h
 @@ -0,0 +1,19 @@
@@ -4137,7 +4125,7 @@ index 000000000000..7a7b1b450f3e
 +#endif /* _CCU_SUN60IW2_H_ */
 diff --git a/include/dt-bindings/clock/sun60i-a733-ccu.h b/include/dt-bindings/clock/sun60i-a733-ccu.h
 new file mode 100644
-index 000000000000..54689b563fa2
+index 000000000000..111111111111
 --- /dev/null
 +++ b/include/dt-bindings/clock/sun60i-a733-ccu.h
 @@ -0,0 +1,336 @@
@@ -4479,7 +4467,7 @@ index 000000000000..54689b563fa2
 +#endif /* _DT_BINDINGS_CLK_SUN60IW2_H_ */
 diff --git a/include/dt-bindings/clock/sun60i-a733-cpupll-ccu.h b/include/dt-bindings/clock/sun60i-a733-cpupll-ccu.h
 new file mode 100644
-index 000000000000..cd791eba207d
+index 000000000000..111111111111
 --- /dev/null
 +++ b/include/dt-bindings/clock/sun60i-a733-cpupll-ccu.h
 @@ -0,0 +1,18 @@
@@ -4503,7 +4491,7 @@ index 000000000000..cd791eba207d
 +#endif /* _DT_BINDINGS_CLK_SUN60IW2_CPUPLL_H_ */
 diff --git a/include/dt-bindings/clock/sun60i-a733-r-ccu.h b/include/dt-bindings/clock/sun60i-a733-r-ccu.h
 new file mode 100644
-index 000000000000..7bd8983a39ef
+index 000000000000..111111111111
 --- /dev/null
 +++ b/include/dt-bindings/clock/sun60i-a733-r-ccu.h
 @@ -0,0 +1,49 @@
@@ -4558,7 +4546,7 @@ index 000000000000..7bd8983a39ef
 +#endif /* _DT_BINDINGS_CLK_SUN60IW2_R_CCU_H_ */
 diff --git a/include/dt-bindings/clock/sun60i-a733-rtc.h b/include/dt-bindings/clock/sun60i-a733-rtc.h
 new file mode 100644
-index 000000000000..83fc97d75370
+index 000000000000..111111111111
 --- /dev/null
 +++ b/include/dt-bindings/clock/sun60i-a733-rtc.h
 @@ -0,0 +1,26 @@
@@ -4590,7 +4578,7 @@ index 000000000000..83fc97d75370
 +#endif /* _DT_BINDINGS_CLK_SUN60IW2_RTC_H_ */
 diff --git a/include/dt-bindings/reset/sun60i-a733-ccu.h b/include/dt-bindings/reset/sun60i-a733-ccu.h
 new file mode 100644
-index 000000000000..c442591a5dba
+index 000000000000..111111111111
 --- /dev/null
 +++ b/include/dt-bindings/reset/sun60i-a733-ccu.h
 @@ -0,0 +1,131 @@
@@ -4727,7 +4715,7 @@ index 000000000000..c442591a5dba
 +#endif /* _DT_BINDINGS_RESET_SUN60IW2_H_ */
 diff --git a/include/dt-bindings/reset/sun60i-a733-r-ccu.h b/include/dt-bindings/reset/sun60i-a733-r-ccu.h
 new file mode 100644
-index 000000000000..0a181e323974
+index 000000000000..111111111111
 --- /dev/null
 +++ b/include/dt-bindings/reset/sun60i-a733-r-ccu.h
 @@ -0,0 +1,25 @@

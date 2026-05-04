@@ -1,14 +1,9 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: John Doe <john.doe@somewhere.on.planet>
+From: Marvin Wewer <mwewer37@proton.me>
 Date: Thu, 26 Mar 2026 13:28:13 +0100
-Subject: Patching kernel sun60iw2 files
- arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7a.dts
- arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7s.dts
- arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7z.dts
- arch/arm64/boot/dts/allwinner/sun60iw2p1-cpu-vf.dtsi
- arch/arm64/boot/dts/allwinner/sun60iw2p1.dtsi
+Subject: dts: Adding device tree files for the Cubie A7A, A7S and A7Z SBCs
 
-Signed-off-by: John Doe <john.doe@somewhere.on.planet>
+Signed-off-by: Marvin Wewer <mwewer37@proton.me>
 ---
  arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7a.dts | 2179 ++++
  arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7s.dts | 1741 ++++
@@ -19,7 +14,7 @@ Signed-off-by: John Doe <john.doe@somewhere.on.planet>
 
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7a.dts b/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7a.dts
 new file mode 100644
-index 000000000000..cc6dece5cd47
+index 000000000000..111111111111
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7a.dts
 @@ -0,0 +1,2086 @@
@@ -2112,7 +2107,7 @@ index 000000000000..cc6dece5cd47
 +};
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7s.dts b/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7s.dts
 new file mode 100644
-index 000000000000..059f9a482c78
+index 000000000000..111111111111
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7s.dts
 @@ -0,0 +1,1686 @@
@@ -3804,7 +3799,7 @@ index 000000000000..059f9a482c78
 +};
 diff --git a/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7z.dts b/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7z.dts
 new file mode 100644
-index 000000000000..87b020d03329
+index 000000000000..111111111111
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7z.dts
 @@ -0,0 +1,1510 @@
@@ -5321,7 +5316,7 @@ index 000000000000..87b020d03329
 \ No newline at end of file
 diff --git a/arch/arm64/boot/dts/allwinner/sun60iw2p1-cpu-vf.dtsi b/arch/arm64/boot/dts/allwinner/sun60iw2p1-cpu-vf.dtsi
 new file mode 100644
-index 000000000000..023105b45da1
+index 000000000000..111111111111
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60iw2p1-cpu-vf.dtsi
 @@ -0,0 +1,2176 @@
@@ -7503,7 +7498,7 @@ index 000000000000..023105b45da1
 +};
 diff --git a/arch/arm64/boot/dts/allwinner/sun60iw2p1.dtsi b/arch/arm64/boot/dts/allwinner/sun60iw2p1.dtsi
 new file mode 100644
-index 000000000000..c6bd161698d6
+index 000000000000..111111111111
 --- /dev/null
 +++ b/arch/arm64/boot/dts/allwinner/sun60iw2p1.dtsi
 @@ -0,0 +1,4367 @@

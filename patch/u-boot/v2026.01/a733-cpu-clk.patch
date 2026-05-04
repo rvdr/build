@@ -1,22 +1,20 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: John Doe <john.doe@somewhere.on.planet>
+From: Marvin Wewer <mwewer37@proton.me>
 Date: Fri, 3 Apr 2026 14:11:59 +0000
-Subject: Patching u-boot sunxi64 files drivers/clk/sunxi/Kconfig
- drivers/clk/sunxi/Makefile drivers/clk/sunxi/clk_sun60_cpupll.c
- arch/arm/include/asm/arch-sunxi/clock_sun50i_h6.h arch/arm/mach-sunxi/clock_sun50i_h6.c
+Subject: Clk: sunxi: Add clock support for Allwinner A733
 
-Signed-off-by: John Doe <john.doe@somewhere.on.planet>
+Signed-off-by: Marvin Wewer <mwewer37@proton.me>
 ---
- drivers/clk/sunxi/Kconfig               |   7 +
- drivers/clk/sunxi/Makefile              |   1 +
- drivers/clk/sunxi/clk_sun60_cpupll.c | 172 ++++++++++
- drivers/clk/sunxi/clk_sun60_rtc.c | 124 ++++++++++
+ drivers/clk/sunxi/Kconfig               	   |   7 +
+ drivers/clk/sunxi/Makefile              	   |   1 +
+ drivers/clk/sunxi/clk_sun60_cpupll.c 		   | 172 ++++++++++
+ drivers/clk/sunxi/clk_sun60_rtc.c 		   | 124 ++++++++++
  arch/arm/include/asm/arch-sunxi/clock_sun50i_h6.h | 7 +++++++
  arch/arm/mach-sunxi/clock_sun50i_h6.c             | 4 ++--
- 2 files changed, 313 insertions(+), 2 deletions(-)
+ 6 files changed, 313 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/clk/sunxi/Kconfig b/drivers/clk/sunxi/Kconfig
-index 1c1cc82719c..0d9cc43df45 100644
+index 111111111111..222222222222 100644
 --- a/drivers/clk/sunxi/Kconfig
 +++ b/drivers/clk/sunxi/Kconfig
 @@ -140,7 +140,14 @@ config CLK_SUN55I_A523_R
@@ -35,7 +33,7 @@ index 1c1cc82719c..0d9cc43df45 100644
  
  endif # CLK_SUNXI
 diff --git a/drivers/clk/sunxi/Makefile b/drivers/clk/sunxi/Makefile
-index 93b542cebcd..82ae5180f64 100644
+index 111111111111..222222222222 100644
 --- a/drivers/clk/sunxi/Makefile
 +++ b/drivers/clk/sunxi/Makefile
 @@ -25,5 +25,6 @@ obj-$(CONFIG_CLK_SUN50I_H6_R) += clk_h6_r.o
@@ -48,7 +46,7 @@ index 93b542cebcd..82ae5180f64 100644
 \ No newline at end of file
 diff --git a/drivers/clk/sunxi/clk_sun60_cpupll.c b/drivers/clk/sunxi/clk_sun60_cpupll.c
 new file mode 100644
-index 00000000000..2b2ac252024
+index 000000000000..111111111111
 --- /dev/null
 +++ b/drivers/clk/sunxi/clk_sun60_cpupll.c
 @@ -0,0 +1,171 @@
@@ -225,7 +223,7 @@ index 00000000000..2b2ac252024
 +};
 diff --git a/drivers/clk/sunxi/clk_sun60_rtc.c b/drivers/clk/sunxi/clk_sun60_rtc.c
 new file mode 100644
-index 00000000000..fba6ae516e3
+index 000000000000..111111111111
 --- /dev/null
 +++ b/drivers/clk/sunxi/clk_sun60_rtc.c
 @@ -0,0 +1,124 @@
@@ -355,7 +353,7 @@ index 00000000000..fba6ae516e3
 +};
 \ No newline at end of file
 diff --git a/arch/arm/include/asm/arch-sunxi/clock_sun50i_h6.h b/arch/arm/include/asm/arch-sunxi/clock_sun50i_h6.h
-index 45fa4ab6e57..24c04e19ccd 100644
+index 111111111111..222222222222 100644
 --- a/arch/arm/include/asm/arch-sunxi/clock_sun50i_h6.h
 +++ b/arch/arm/include/asm/arch-sunxi/clock_sun50i_h6.h
 @@ -113,10 +113,17 @@
@@ -377,7 +375,7 @@ index 45fa4ab6e57..24c04e19ccd 100644
  #define APB2_CLK_SRC_OSC24M		(0x0 << 24)
  #define APB2_CLK_SRC_OSC32K		(0x1 << 24)
 diff --git a/arch/arm/mach-sunxi/clock_sun50i_h6.c b/arch/arm/mach-sunxi/clock_sun50i_h6.c
-index 80004f13a1e..708e3c66001 100644
+index 111111111111..222222222222 100644
 --- a/arch/arm/mach-sunxi/clock_sun50i_h6.c
 +++ b/arch/arm/mach-sunxi/clock_sun50i_h6.c
 @@ -46,11 +46,11 @@ void clock_init_safe(void)

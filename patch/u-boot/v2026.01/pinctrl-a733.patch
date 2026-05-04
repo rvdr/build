@@ -1,17 +1,16 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: John Doe <john.doe@somewhere.on.planet>
+From: Marvin Wewer <mwewer37@proton.me>
 Date: Sat, 4 Apr 2026 16:27:49 +0000
-Subject: Patching u-boot sunxi64 files drivers/pinctrl/sunxi/Kconfig
- drivers/pinctrl/sunxi/pinctrl-sunxi.c
+Subject: pinctrl: sunxi: Add support for the Allwinner A733 PIO
 
-Signed-off-by: John Doe <john.doe@somewhere.on.planet>
+Signed-off-by: Marvin Wewer <mwewer37@proton.me>
 ---
  drivers/pinctrl/sunxi/Kconfig         | 10 ++
  drivers/pinctrl/sunxi/pinctrl-sunxi.c | 60 ++++++++++
  2 files changed, 70 insertions(+)
 
 diff --git a/drivers/pinctrl/sunxi/Kconfig b/drivers/pinctrl/sunxi/Kconfig
-index 54314992299..49e195143d8 100644
+index 111111111111..222222222222 100644
 --- a/drivers/pinctrl/sunxi/Kconfig
 +++ b/drivers/pinctrl/sunxi/Kconfig
 @@ -146,7 +146,17 @@ config PINCTRL_SUN55I_A523
@@ -33,7 +32,7 @@ index 54314992299..49e195143d8 100644
  
  endif
 diff --git a/drivers/pinctrl/sunxi/pinctrl-sunxi.c b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
-index fd357ab0d4e..eb48130b5d4 100644
+index 111111111111..222222222222 100644
 --- a/drivers/pinctrl/sunxi/pinctrl-sunxi.c
 +++ b/drivers/pinctrl/sunxi/pinctrl-sunxi.c
 @@ -780,10 +780,42 @@ static const struct sunxi_pinctrl_desc __maybe_unused sun55i_a523_pinctrl_desc =

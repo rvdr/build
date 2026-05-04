@@ -1,18 +1,17 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: John Doe <john.doe@somewhere.on.planet>
+From: Marvin Wewer <mwewer37@proton.me>
 Date: Sun, 29 Mar 2026 18:51:42 +0200
-Subject: Patching u-boot sunxi64 files configs/orange-pi-4-pro_defconfig
- configs/radxa-cubie-a7a_defconfig
+Subject: Adding defconfigs for the A733 SoC
 
-Signed-off-by: John Doe <john.doe@somewhere.on.planet>
+Signed-off-by: Marvin Wewer <mwewer37@proton.me>
 ---
- configs/orange-pi-4-pro_defconfig                 |  33 ++++++++++
- configs/radxa-cubie-a7a_defconfig                 |  33 ++++++++++
- 3 files changed, 66 insertions(+)
+ configs/orange-pi-4-pro_defconfig                 |  35 ++++++++++
+ configs/radxa-cubie-a7a_defconfig                 |  37 ++++++++++
+ 2 files changed, 72 insertions(+)
 
 diff --git a/configs/orange-pi-4-pro_defconfig b/configs/orange-pi-4-pro_defconfig
 new file mode 100644
-index 00000000000..83dc76d9fb2
+index 000000000000..111111111111
 --- /dev/null
 +++ b/configs/orange-pi-4-pro_defconfig
 @@ -0,0 +1,35 @@
@@ -54,18 +53,14 @@ index 00000000000..83dc76d9fb2
 \ No newline at end of file
 diff --git a/configs/radxa-cubie-a7a_defconfig b/configs/radxa-cubie-a7a_defconfig
 new file mode 100644
-index 00000000000..b9fcfff0bcc
+index 000000000000..111111111111
 --- /dev/null
 +++ b/configs/radxa-cubie-a7a_defconfig
-@@ -0,0 +1,41 @@
+@@ -0,0 +1,37 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_SUNXI=y
 +CONFIG_DEFAULT_DEVICE_TREE="allwinner/sun60i-a733-cubie-a7a"
 +CONFIG_SPL=y
-+CONFIG_SYS_SDRAM_BASE=0x40000000
-+CONFIG_SYS_INIT_RAM_ADDR=0x40000000
-+CONFIG_SYS_INIT_RAM_SIZE=0x200000
-+CONFIG_SYS_LOAD_ADDR=0x42000000
 +CONFIG_DRAM_SUNXI_DX_ODT=0x0E0E0E0E
 +CONFIG_DRAM_SUNXI_DX_DRI=0x0F0F0F0F
 +CONFIG_DRAM_SUNXI_CA_DRI=0xEC030E0F
@@ -80,8 +75,8 @@ index 00000000000..b9fcfff0bcc
 +CONFIG_MMC_SUNXI_SLOT_EXTRA=2
 +CONFIG_R_I2C_ENABLE=y
 +# CONFIG_SYS_MALLOC_CLEAR_ON_INIT is not set
-+CONFIG_SPL_I2C=y
-+CONFIG_SPL_SYS_I2C_LEGACY=y
++#CONFIG_SPL_I2C=y
++#CONFIG_SPL_SYS_I2C_LEGACY=y
 +CONFIG_SYS_I2C_MVTWSI=y
 +CONFIG_SYS_I2C_SLAVE=0x7f
 +CONFIG_SYS_I2C_SPEED=400000
@@ -97,7 +92,7 @@ index 00000000000..b9fcfff0bcc
 +CONFIG_DEBUG_UART_NS16550=y
 +CONFIG_DEBUG_UART_BASE=0x02500000
 +CONFIG_DEBUG_UART_CLOCK=24000000
-+CONFIG_SPL_IMAGE_TYPE="sunxi_toc0"
++CONFIG_DEBUG_UART_BOARD_INIT=y
 +CONFIG_DEBUG_UART_ANNOUNCE=y
 \ No newline at end of file
 -- 
